@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: cauri-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COMMISSION_RATE
+        value: "0.12"
+      - key: KKIAPAY_SANDBOX
+        value: "true"
+      - key: DATABASE_URL
+        sync: false
+      - key: KKIAPAY_PUBLIC_KEY
+        sync: false
+      - key: KKIAPAY_PRIVATE_KEY
+        sync: false
+      - key: KKIAPAY_SECRET_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false

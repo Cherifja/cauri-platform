@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Paiement de la reservation</title>
+  <script src="https://cdn.kkiapay.me/k.js"></script>
+</head>
+<body>
+  <h1>Paiement securise</h1>
+  <p id="status">Preparation de la reservation...</p>
+
+  <script>
+    const API_BASE = "http://localhost:4000";
+
+    async function startCheckout() {
+      // 1. On demande au backend de creer la reservation ET de calculer le
+      //    prix (jamais calcule cote client, pour eviter toute manipulation).
+      const initRes = await fetch(`${API_BASE}/api/bookings/initiate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId: "villa-ganvie",
+          nights: 3,
+          travelerEmail: "voyageur@example.com",
+        }),
+      });
+      const { bookingId, amountTotal, publicKey } = await initRes.json();
+
+      document.getElementById("status").innerText =
+        `Reservation ${bookingId} - montant a payer : ${amountTotal} F CFA`;
+
+      // 2. On ouvre le widget Kkiapay avec ce montant exact.
+      openKkiapayWidget({
+        amount: amountTotal,
+        key: publicKey,
+        sandbox: true, // false en production
+        data: bookingId, // on retrouve la reservation liee au paiement
+      });
+    }
+
+    // 3. Quand Kkiapay confirme un succes cote client, on envoie le
+    //    transactionId au backend, qui va lui re-verifier le paiement
+    //    aupres de Kkiapay avant de valider quoi que ce soit.
+    addSuccessListener(async (response) => {
+      const bookingId = response.data; // on avait passe bookingId dans "data"
+      const confirmRes = await fetch(`${API_BASE}/api/bookings/${bookingId}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transactionId: response.transactionId }),
+      });
+      const result = await confirmRes.json();
+
+      if (result.status === "paid") {
+        document.getElementById("status").innerText =
+          `Paiement confirme. Commission plateforme : ${result.commission} F CFA - a reverser au proprietaire : ${result.payoutDueToOwner} F CFA`;
+      } else {
+        document.getElementById("status").innerText = "Le paiement n'a pas pu etre confirme.";
+      }
+    });
+
+    addFailedListener((error) => {
+      document.getElementById("status").innerText = "Paiement echoue ou annule.";
+    });
+
+    startCheckout();
+  </script>
+</body>
+</html>

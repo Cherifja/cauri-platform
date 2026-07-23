@@ -1,0 +1,37 @@
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/Header.jsx";
+import RequireAuth from "./components/RequireAuth.jsx";
+import { AuthProvider } from "./lib/AuthContext.jsx";
+import Home from "./pages/Home.jsx";
+import PropertyDetail from "./pages/PropertyDetail.jsx";
+import Booking from "./pages/Booking.jsx";
+import Confirmation from "./pages/Confirmation.jsx";
+import OwnerDashboard from "./pages/OwnerDashboard.jsx";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <div className="max-w-md mx-auto min-h-screen font-body">
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/logement/:slug" element={<PropertyDetail />} />
+          <Route path="/logement/:slug/reserver" element={<Booking />} />
+          <Route path="/confirmation" element={<Confirmation />} />
+          <Route path="/proprietaire/connexion" element={<Login />} />
+          <Route path="/proprietaire/inscription" element={<Register />} />
+          <Route
+            path="/proprietaire"
+            element={
+              <RequireAuth>
+                <OwnerDashboard />
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      </div>
+    </AuthProvider>
+  );
+}
