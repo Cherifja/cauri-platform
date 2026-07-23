@@ -1,17 +1,15 @@
--- Schéma Postgres pour Cauri, à exécuter dans l'éditeur SQL de Supabase
--- (ou via psql sur n'importe quelle base Postgres).
--- Équivalent Postgres du schéma SQLite utilisé en développement local.
+-- Schema Postgres pour Cauri, a executer dans l'editeur SQL de Supabase.
+-- Version "mobile" : utilise le guillemet dollar ($t$...$t$) au lieu du
+-- guillemet simple pour les textes, car les claviers de telephone
+-- remplacent parfois automatiquement les apostrophes par des guillemets
+-- typographiques, ce qui casse la syntaxe SQL.
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
-  role TEXT NOT NULL DEFAULT 'owner',
-  -- Numéro Mobile Money (format international, ex. 22997000000) où le
-  -- propriétaire souhaite recevoir ses versements. Facultatif pour l'instant
-  -- (le versement est manuel), mais nécessaire le jour où l'automatisation
-  -- via Kkiapay Push sera activée.
+  role TEXT NOT NULL DEFAULT $t$owner$t$,
   mobile_money_number TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -44,7 +42,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   amount_total INTEGER NOT NULL,
   commission_amount INTEGER NOT NULL,
   payout_amount INTEGER NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
+  status TEXT NOT NULL DEFAULT $t$pending$t$,
   kkiapay_transaction_id TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   paid_at TIMESTAMPTZ
@@ -55,24 +53,21 @@ CREATE TABLE IF NOT EXISTS owner_payouts (
   owner_id TEXT NOT NULL,
   booking_id TEXT NOT NULL REFERENCES bookings(id),
   amount INTEGER NOT NULL,
-  status TEXT NOT NULL DEFAULT 'owed',
+  status TEXT NOT NULL DEFAULT $t$owed$t$,
   transferred_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_bookings_property_status ON bookings(property_id, status);
 CREATE INDEX IF NOT EXISTS idx_owner_payouts_owner_status ON owner_payouts(owner_id, status);
 
--- Comptes propriétaires de démo (mot de passe : motdepasse123).
--- Le hash ci-dessous est un hash bcrypt réel de "motdepasse123" — tu peux
--- le regénérer avec : node -e "console.log(require('bcryptjs').hashSync('motdepasse123', 10))"
 INSERT INTO users (id, email, password_hash, name, role) VALUES
-  ('owner-adjovi', 'adjovi@example.com', '$2a$10$oJohEGhjaKPG98L9ZruBmOzpto8YSekjstHLhaAOLWkKQ4ZSWUHPO', 'Adjovi', 'owner'),
-  ('owner-roger', 'roger@example.com', '$2a$10$oJohEGhjaKPG98L9ZruBmOzpto8YSekjstHLhaAOLWkKQ4ZSWUHPO', 'Roger', 'owner')
+  ($t$owner-adjovi$t$, $t$adjovi@example.com$t$, $t$$2a$10$oJohEGhjaKPG98L9ZruBmOzpto8YSekjstHLhaAOLWkKQ4ZSWUHPO$t$, $t$Adjovi$t$, $t$owner$t$),
+  ($t$owner-roger$t$, $t$roger@example.com$t$, $t$$2a$10$oJohEGhjaKPG98L9ZruBmOzpto8YSekjstHLhaAOLWkKQ4ZSWUHPO$t$, $t$Roger$t$, $t$owner$t$)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO properties (id, slug, title, city, price_per_night, guests, beds, lat, lng, tag, description, owner_id, owner_name) VALUES
-  ('prop-1', 'villa-ganvie', 'Villa sur pilotis, Ganvié', 'Ganvié', 45000, 4, 2, 6.4667, 2.4167, 'Lagune', 'Villa au bord de l''eau avec vue sur la cité lacustre de Ganvié, accès en pirogue privée le matin.', 'owner-adjovi', 'Adjovi K.'),
-  ('prop-2', 'appart-cotonou', 'Appartement moderne, Cotonou', 'Cotonou', 32000, 2, 1, 6.3703, 2.3912, 'Centre-ville', 'Appartement climatisé proche de la Marina, idéal pour un séjour d''affaires ou une escale en ville.', 'owner-adjovi', 'Adjovi K.'),
-  ('prop-3', 'case-ouidah', 'Case traditionnelle, Ouidah', 'Ouidah', 28000, 3, 2, 6.3616, 2.0852, 'Culture', 'Logement à deux pas de la Route des Esclaves et des temples vaudou, jardin tropical privé.', 'owner-roger', 'Roger T.'),
-  ('prop-4', 'bungalow-grand-popo', 'Bungalow plage, Grand-Popo', 'Grand-Popo', 38000, 5, 3, 6.2833, 1.8167, 'Plage', 'Bungalow face à l''océan Atlantique, réveil au son des vagues et ponton privé pour le coucher de soleil.', 'owner-roger', 'Roger T.')
+  ($t$prop-1$t$, $t$villa-ganvie$t$, $t$Villa sur pilotis, Ganvié$t$, $t$Ganvié$t$, 45000, 4, 2, 6.4667, 2.4167, $t$Lagune$t$, $t$Villa au bord de l'eau avec vue sur la cité lacustre de Ganvié, accès en pirogue privée le matin.$t$, $t$owner-adjovi$t$, $t$Adjovi K.$t$),
+  ($t$prop-2$t$, $t$appart-cotonou$t$, $t$Appartement moderne, Cotonou$t$, $t$Cotonou$t$, 32000, 2, 1, 6.3703, 2.3912, $t$Centre-ville$t$, $t$Appartement climatisé proche de la Marina, idéal pour un séjour d'affaires ou une escale en ville.$t$, $t$owner-adjovi$t$, $t$Adjovi K.$t$),
+  ($t$prop-3$t$, $t$case-ouidah$t$, $t$Case traditionnelle, Ouidah$t$, $t$Ouidah$t$, 28000, 3, 2, 6.3616, 2.0852, $t$Culture$t$, $t$Logement à deux pas de la Route des Esclaves et des temples vaudou, jardin privé tropical.$t$, $t$owner-roger$t$, $t$Roger T.$t$),
+  ($t$prop-4$t$, $t$bungalow-grand-popo$t$, $t$Bungalow plage, Grand-Popo$t$, $t$Grand-Popo$t$, 38000, 5, 3, 6.2833, 1.8167, $t$Plage$t$, $t$Bungalow face à l'océan Atlantique, réveil au son des vagues et ponton privé pour le coucher de soleil.$t$, $t$owner-roger$t$, $t$Roger T.$t$)
 ON CONFLICT (id) DO NOTHING;
