@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import PropertyCard from "../components/PropertyCard.jsx";
 import PaymentMethods from "../components/PaymentMethods.jsx";
-import { api } from "../lib/api.js";
+import { api, API_BASE } from "../lib/api.js";
 
 export default function Home() {
   const [properties, setProperties] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [errorDetail, setErrorDetail] = useState("");
 
   useEffect(() => {
     api
@@ -14,7 +15,10 @@ export default function Home() {
         setProperties(data);
         setStatus("ready");
       })
-      .catch(() => setStatus("error"));
+      .catch((err) => {
+        setErrorDetail(err.message || String(err));
+        setStatus("error");
+      });
   }, []);
 
   return (
@@ -44,10 +48,11 @@ export default function Home() {
           <p className="text-sm text-ink2">Chargement des logements…</p>
         )}
         {status === "error" && (
-          <p className="text-sm text-clay">
-            Impossible de joindre le serveur. Vérifie que le backend tourne sur{" "}
-            <code>localhost:4000</code>.
-          </p>
+          <div className="text-sm text-clay bg-white border border-clay rounded-xl p-4">
+            <p className="font-medium mb-1">Diagnostic de connexion :</p>
+            <p>Adresse contactée : <code className="break-all">{API_BASE}</code></p>
+            <p>Erreur exacte : <code className="break-all">{errorDetail}</code></p>
+          </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
