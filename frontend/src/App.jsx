@@ -13,7 +13,7 @@ import Register from "./pages/Register.jsx";
 export default function App() {
   return (
     <AuthProvider>
-      <div className="max-w-md mx-auto min-h-screen font-body">
+      <div className="min-h-screen font-body">
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />

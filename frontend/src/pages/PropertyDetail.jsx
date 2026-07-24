@@ -34,17 +34,17 @@ export default function PropertyDetail() {
 
   return (
     <div className="bg-cream min-h-full">
-      <div className="p-5">
+      <div className="p-5 md:p-8 max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="text-xs mb-4 text-ink2">
           ← Retour
         </button>
         <div className="rounded-2xl overflow-hidden mb-4">
-          <MapPreview tag={property.tag} />
+          <MapPreview tag={property.tag} className="h-40 md:h-72" />
         </div>
         <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">
           {property.tag}
         </span>
-        <h1 className="text-2xl mt-2 mb-1 font-display font-semibold text-ink900">
+        <h1 className="text-2xl md:text-3xl mt-2 mb-1 font-display font-semibold text-ink900">
           {property.title}
         </h1>
         <p className="text-sm mb-4 text-ink2">

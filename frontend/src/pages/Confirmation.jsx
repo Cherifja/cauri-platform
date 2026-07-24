@@ -13,7 +13,7 @@ export default function Confirmation() {
   const mapsUrl = mapsDirectionsUrl(property.lat, property.lng);
 
   return (
-    <div className="p-5 bg-cream min-h-full">
+    <div className="p-5 max-w-2xl mx-auto bg-cream min-h-full">
       <div className="rounded-2xl p-5 mb-5 text-center bg-ink">
         <div className="text-3xl mb-2">✓</div>
         <h1 className="text-xl mb-1 font-display font-semibold text-cream">

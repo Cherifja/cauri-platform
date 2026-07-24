@@ -72,7 +72,7 @@ export default function Booking() {
   if (status === "loading") return <p className="p-5 text-sm text-ink2">Chargement…</p>;
   if (!property)
     return (
-      <div className="p-5">
+      <div className="p-5 max-w-2xl mx-auto">
         <p className="text-sm text-clay mb-3">Logement introuvable.</p>
         <Link to="/" className="text-sm text-ink2 underline">
           Retour à l'accueil
@@ -137,7 +137,7 @@ export default function Booking() {
 
   return (
     <div className="bg-cream min-h-full">
-      <div className="p-5">
+      <div className="p-5 max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="text-xs mb-4 text-ink2">
           ← Retour
         </button>

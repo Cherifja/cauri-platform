@@ -58,23 +58,25 @@ export default function OwnerDashboard() {
   return (
     <div className="bg-cream min-h-full">
       <div className="px-5 pt-8 pb-6 bg-gradient-to-b from-ink to-ink2">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">Espace propriétaire</p>
-            <h1 className="text-2xl mb-1 font-display font-semibold text-cream">
-              Bienvenue, {user?.name}
-            </h1>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">Espace propriétaire</p>
+              <h1 className="text-2xl mb-1 font-display font-semibold text-cream">
+                Bienvenue, {user?.name}
+              </h1>
+            </div>
+            <button onClick={logout} className="text-xs text-sandDeep underline mt-1">
+              Déconnexion
+            </button>
           </div>
-          <button onClick={logout} className="text-xs text-sandDeep underline mt-1">
-            Déconnexion
-          </button>
+          <p className="text-xs text-sandDeep">
+            Commission plateforme : 12% prélevée automatiquement sur chaque réservation payée.
+          </p>
         </div>
-        <p className="text-xs text-sandDeep">
-          Commission plateforme : 12% prélevée automatiquement sur chaque réservation payée.
-        </p>
       </div>
 
-      <div className="flex px-5 gap-2 mt-4 mb-2">
+      <div className="flex px-5 gap-2 mt-4 mb-2 max-w-4xl mx-auto">
         {[
           { id: "annonces", label: "Mes annonces" },
           { id: "revenus", label: "Revenus" },
@@ -93,7 +95,7 @@ export default function OwnerDashboard() {
       </div>
 
       {tab === "annonces" && (
-        <div className="px-5 py-4 flex flex-col gap-3">
+        <div className="px-5 py-4 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
           {properties.length === 0 && (
             <p className="text-sm text-ink2">Aucune annonce publiée pour le moment.</p>
           )}
@@ -116,7 +118,7 @@ export default function OwnerDashboard() {
       )}
 
       {tab === "revenus" && (
-        <div className="px-5 py-4">
+        <div className="px-5 py-4 max-w-4xl mx-auto">
           <div className="rounded-2xl p-4 mb-4 bg-white border border-sandDeep">
             <p className="text-[11px] text-ink2">Montant en attente de virement</p>
             <p className="text-lg font-semibold text-green">
@@ -179,7 +181,7 @@ export default function OwnerDashboard() {
       )}
 
       {tab === "ajouter" && (
-        <form onSubmit={submit} className="px-5 py-4 flex flex-col gap-3">
+        <form onSubmit={submit} className="px-5 py-4 flex flex-col gap-3 max-w-xl mx-auto">
           <input
             placeholder="Titre de l'annonce"
             value={form.title}

@@ -32,11 +32,13 @@ export default function Register() {
   return (
     <div className="bg-cream min-h-full">
       <div className="px-5 pt-10 pb-8 bg-gradient-to-b from-ink to-ink2">
-        <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">Espace propriétaire</p>
-        <h1 className="text-2xl font-display font-semibold text-cream">Créer un compte</h1>
+        <div className="max-w-md mx-auto">
+          <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">Espace propriétaire</p>
+          <h1 className="text-2xl font-display font-semibold text-cream">Créer un compte</h1>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="px-5 py-6 flex flex-col gap-3">
+      <form onSubmit={handleSubmit} className="px-5 py-6 flex flex-col gap-3 max-w-md mx-auto">
         <input
           placeholder="Nom complet"
           value={form.name}
