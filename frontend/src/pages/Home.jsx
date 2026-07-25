@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import PropertyCard from "../components/PropertyCard.jsx";
 import PaymentMethods from "../components/PaymentMethods.jsx";
-import { api, API_BASE } from "../lib/api.js";
+import { api } from "../lib/api.js";
 
 export default function Home() {
   const [properties, setProperties] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
-  const [errorDetail, setErrorDetail] = useState("");
 
   useEffect(() => {
     api
@@ -15,10 +14,7 @@ export default function Home() {
         setProperties(data);
         setStatus("ready");
       })
-      .catch((err) => {
-        setErrorDetail(err.message || String(err));
-        setStatus("error");
-      });
+      .catch(() => setStatus("error"));
   }, []);
 
   return (

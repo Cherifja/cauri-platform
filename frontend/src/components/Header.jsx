@@ -14,20 +14,19 @@ export default function Header() {
             Bénin
           </span>
         </Link>
-        <div className="flex rounded-full p-0.5 bg-ink2">
+        {/* Le lien vers l'espace propriétaire n'apparaît ici que si un
+            propriétaire est déjà connecté (pour qu'il retrouve son tableau
+            de bord facilement). Pour un visiteur non connecté, cet espace
+            n'est volontairement pas mis en avant dans la navigation
+            principale — voir le petit lien en bas de page (Footer). */}
+        {user && (
           <button
-            onClick={() => navigate("/")}
-            className="text-[11px] md:text-xs px-3 py-1.5 rounded-full text-sandDeep hover:text-cream"
+            onClick={() => navigate("/proprietaire")}
+            className="text-[11px] md:text-xs px-3 py-1.5 rounded-full bg-ink2 text-sandDeep hover:text-cream"
           >
-            Voyageur
+            {user.name}
           </button>
-          <button
-            onClick={() => navigate(user ? "/proprietaire" : "/proprietaire/connexion")}
-            className="text-[11px] md:text-xs px-3 py-1.5 rounded-full text-sandDeep hover:text-cream"
-          >
-            {user ? user.name : "Propriétaire"}
-          </button>
-        </div>
+        )}
       </div>
     </header>
   );
