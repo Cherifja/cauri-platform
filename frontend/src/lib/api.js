@@ -22,6 +22,10 @@ export const auth = {
   register: (payload) => request("/api/auth/register", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => request("/api/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   me: () => request("/api/auth/me"),
+  forgotPassword: (email) =>
+    request("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+  resetPassword: (token, password) =>
+    request("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, password }) }),
   saveSession: ({ token, user }) => {
     localStorage.setItem("cauri_token", token);
     localStorage.setItem("cauri_user", JSON.stringify(user));

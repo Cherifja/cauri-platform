@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { kkiapay } = require("@kkiapay-org/nodejs-sdk");
 const { query, queryOne } = require("./db");
+const { sendPasswordResetEmail } = require("./email");
 
 const app = express();
 app.use(
@@ -103,6 +104,82 @@ app.post("/api/auth/login", async (req, res) => {
 
 app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user: req.user });
+});
+
+const RESET_TOKEN_TTL_MINUTES = 60;
+
+/**
+ * Demande de réinitialisation. Répond toujours de la même façon, que
+ * l'email existe ou non, pour ne pas révéler quels comptes existent
+ * (protection standard contre l'énumération d'utilisateurs).
+ */
+app.post("/api/auth/forgot-password", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email requis" });
+
+  const user = await queryOne("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+
+  if (user) {
+    // Le jeton envoyé par email est aléatoire et n'est jamais stocké tel
+    // quel en base : seul son empreinte (hash) y est conservée, comme pour
+    // un mot de passe. Ainsi, même un accès à la base ne permet pas de
+    // fabriquer un lien de réinitialisation valide.
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
+
+    await query(
+      "INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)",
+      [user.id, tokenHash, expiresAt]
+    );
+
+    const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").split(",")[0];
+    const resetUrl = `${frontendUrl}/proprietaire/reinitialiser-mot-de-passe?token=${rawToken}`;
+
+    try {
+      await sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl });
+    } catch (err) {
+      console.error("Échec d'envoi de l'email de réinitialisation:", err.message);
+      // On ne révèle pas l'échec technique au client, toujours pour la
+      // même raison que ci-dessus (ne pas confirmer/infirmer l'existence
+      // du compte, et ne pas exposer de détails d'infrastructure).
+    }
+  }
+
+  res.json({
+    message: "Si un compte existe avec cet email, un lien de réinitialisation vient d'être envoyé.",
+  });
+});
+
+/**
+ * Confirme la réinitialisation : vérifie le jeton (non expiré, non déjà
+ * utilisé), met à jour le mot de passe, puis invalide le jeton.
+ */
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) {
+    return res.status(400).json({ error: "Jeton et nouveau mot de passe requis" });
+  }
+  if (password.length < 8) {
+    return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
+  }
+
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+  const record = await queryOne(
+    `SELECT * FROM password_reset_tokens
+     WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()`,
+    [tokenHash]
+  );
+
+  if (!record) {
+    return res.status(400).json({ error: "Ce lien de réinitialisation est invalide ou a expiré" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, record.user_id]);
+  await query("UPDATE password_reset_tokens SET used_at = now() WHERE id = $1", [record.id]);
+
+  res.json({ ok: true });
 });
 
 /**

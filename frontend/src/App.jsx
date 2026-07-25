@@ -9,6 +9,8 @@ import Confirmation from "./pages/Confirmation.jsx";
 import OwnerDashboard from "./pages/OwnerDashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
           <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/proprietaire/connexion" element={<Login />} />
           <Route path="/proprietaire/inscription" element={<Register />} />
+          <Route path="/proprietaire/mot-de-passe-oublie" element={<ForgotPassword />} />
+          <Route path="/proprietaire/reinitialiser-mot-de-passe" element={<ResetPassword />} />
           <Route
             path="/proprietaire"
             element={
