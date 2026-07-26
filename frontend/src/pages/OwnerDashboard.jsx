@@ -18,6 +18,8 @@ export default function OwnerDashboard() {
   const [formError, setFormError] = useState("");
   const [momoNumber, setMomoNumber] = useState("");
   const [momoStatus, setMomoStatus] = useState(""); // "" | "saving" | "saved" | "error"
+  const [deletingSlug, setDeletingSlug] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   function loadProperties() {
     api.ownerProperties().then(setProperties).catch(() => {});
@@ -101,6 +103,24 @@ export default function OwnerDashboard() {
     }
   }
 
+  async function handleDelete(property) {
+    const confirmed = window.confirm(
+      `Supprimer définitivement "${property.title}" ? Cette action est irréversible.`
+    );
+    if (!confirmed) return;
+
+    setDeleteError("");
+    setDeletingSlug(property.slug);
+    try {
+      await api.deleteProperty(property.slug);
+      loadProperties();
+    } catch (err) {
+      setDeleteError(err.message || "Impossible de supprimer cette annonce.");
+    } finally {
+      setDeletingSlug(null);
+    }
+  }
+
   return (
     <div className="bg-cream min-h-full">
       <div className="px-5 pt-8 pb-6 bg-gradient-to-b from-ink to-ink2">
@@ -141,34 +161,47 @@ export default function OwnerDashboard() {
       </div>
 
       {tab === "annonces" && (
-        <div className="px-5 py-4 max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
-          {properties.length === 0 && (
-            <p className="text-sm text-ink2">Aucune annonce publiée pour le moment.</p>
+        <div className="px-5 py-4 max-w-4xl mx-auto">
+          {deleteError && (
+            <p className="text-xs text-clay mb-3 rounded-lg bg-white border border-clay p-3">
+              {deleteError}
+            </p>
           )}
-          {properties.map((p) => (
-            <div
-              key={p.id}
-              className="rounded-2xl p-4 flex items-center gap-3 bg-white border border-sandDeep"
-            >
-              {p.photo_urls && p.photo_urls.length > 0 ? (
-                <img
-                  src={p.photo_urls[0]}
-                  alt={p.title}
-                  className="w-14 h-14 rounded-xl flex-shrink-0 object-cover"
-                />
-              ) : (
-                <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-lagoon" />
-              )}
-              <div className="flex-1">
-                <p className="text-sm font-medium text-ink900">{p.title}</p>
-                <p className="text-xs text-ink2">
-                  {p.city} · {fmt(p.price_per_night)}/nuit
-                  {p.photo_urls?.length > 0 && ` · ${p.photo_urls.length} photo${p.photo_urls.length > 1 ? "s" : ""}`}
-                </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {properties.length === 0 && (
+              <p className="text-sm text-ink2">Aucune annonce publiée pour le moment.</p>
+            )}
+            {properties.map((p) => (
+              <div
+                key={p.id}
+                className="rounded-2xl p-4 flex items-center gap-3 bg-white border border-sandDeep"
+              >
+                {p.photo_urls && p.photo_urls.length > 0 ? (
+                  <img
+                    src={p.photo_urls[0]}
+                    alt={p.title}
+                    className="w-14 h-14 rounded-xl flex-shrink-0 object-cover"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-lagoon" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-ink900 truncate">{p.title}</p>
+                  <p className="text-xs text-ink2">
+                    {p.city} · {fmt(p.price_per_night)}/nuit
+                    {p.photo_urls?.length > 0 && ` · ${p.photo_urls.length} photo${p.photo_urls.length > 1 ? "s" : ""}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(p)}
+                  disabled={deletingSlug === p.slug}
+                  className="text-[11px] px-2 py-1.5 rounded-full text-clay border border-clay disabled:opacity-50 flex-shrink-0"
+                >
+                  {deletingSlug === p.slug ? "…" : "Supprimer"}
+                </button>
               </div>
-              <span className="text-[10px] px-2 py-1 rounded-full bg-sand text-green">Active</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

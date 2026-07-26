@@ -276,6 +276,35 @@ app.post("/api/properties", requireAuth, async (req, res) => {
   res.status(201).json({ id, slug });
 });
 
+/**
+ * Supprime une annonce. Réservé au propriétaire qui l'a publiée : on
+ * vérifie que owner_id correspond à l'utilisateur authentifié avant de
+ * supprimer quoi que ce soit.
+ */
+app.delete("/api/properties/:slug", requireAuth, async (req, res) => {
+  const property = await queryOne("SELECT * FROM properties WHERE slug = $1", [req.params.slug]);
+  if (!property) return res.status(404).json({ error: "Logement introuvable" });
+  if (property.owner_id !== req.user.id) {
+    return res.status(403).json({ error: "Tu ne peux supprimer que tes propres annonces" });
+  }
+
+  // On bloque la suppression s'il existe des réservations payées liées à
+  // ce logement, pour ne jamais casser l'historique d'un voyageur qui a
+  // déjà réservé (et le suivi des versements au propriétaire).
+  const activeBooking = await queryOne(
+    "SELECT id FROM bookings WHERE property_id = $1 AND status = 'paid' LIMIT 1",
+    [property.slug]
+  );
+  if (activeBooking) {
+    return res.status(409).json({
+      error: "Impossible de supprimer : ce logement a au moins une réservation payée dans son historique.",
+    });
+  }
+
+  await query("DELETE FROM properties WHERE slug = $1", [property.slug]);
+  res.json({ ok: true });
+});
+
 /* ------------------------------------------------------------------ */
 /* Disponibilité et réservation                                        */
 /* ------------------------------------------------------------------ */
