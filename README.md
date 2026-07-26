@@ -77,6 +77,11 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
   Supabase Storage (`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` côté
   frontend), jusqu'à 8 photos + 1 vidéo par annonce, affichées en galerie
   sur la fiche logement
+- **Comptes voyageurs** : inscription et connexion (`/inscription`, `/connexion`),
+  requis avant de réserver — chaque réservation est automatiquement liée à
+  l'identité du voyageur connecté (`traveler_id`), jamais à un email saisi
+  librement ; après connexion, le voyageur est renvoyé exactement là où il
+  s'était arrêté (ex. sa réservation en cours)
 - Espace propriétaire : publication d'annonces, suivi des revenus en attente de virement
 - Prêt à déployer : base PostgreSQL (compatible hébergement serverless),
   configuration Render (`render.yaml`) et Vercel (`frontend/vercel.json`)

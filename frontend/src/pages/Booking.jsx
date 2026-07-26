@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api, fmt, splitCommission } from "../lib/api.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 
 function toISODate(date) {
   return date.toISOString().slice(0, 10);
@@ -27,6 +28,7 @@ function overlapsBlocked(checkIn, checkOut, blockedRanges) {
 export default function Booking() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [property, setProperty] = useState(null);
   const [blockedRanges, setBlockedRanges] = useState([]);
   const today = useMemo(() => toISODate(new Date()), []);
@@ -141,9 +143,14 @@ export default function Booking() {
         <button onClick={() => navigate(-1)} className="text-xs mb-4 text-ink2">
           ← Retour
         </button>
-        <h1 className="text-xl mb-4 font-display font-semibold text-ink900">
+        <h1 className="text-xl mb-1 font-display font-semibold text-ink900">
           Confirmer et payer
         </h1>
+        {user && (
+          <p className="text-xs mb-4 text-ink2">
+            Connecté en tant que <strong>{user.name}</strong> ({user.email})
+          </p>
+        )}
 
         <div className="rounded-2xl p-4 mb-4 bg-white border border-sandDeep">
           <div className="text-sm font-medium mb-3 text-ink900">{property.title}</div>

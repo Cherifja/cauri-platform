@@ -11,6 +11,8 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import TravelerLogin from "./pages/TravelerLogin.jsx";
+import TravelerRegister from "./pages/TravelerRegister.jsx";
 
 export default function App() {
   return (
@@ -20,7 +22,16 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/logement/:slug" element={<PropertyDetail />} />
-          <Route path="/logement/:slug/reserver" element={<Booking />} />
+          <Route path="/connexion" element={<TravelerLogin />} />
+          <Route path="/inscription" element={<TravelerRegister />} />
+          <Route
+            path="/logement/:slug/reserver"
+            element={
+              <RequireAuth redirectTo="/connexion" requireRole="traveler">
+                <Booking />
+              </RequireAuth>
+            }
+          />
           <Route path="/confirmation" element={<Confirmation />} />
           <Route path="/proprietaire/connexion" element={<Login />} />
           <Route path="/proprietaire/inscription" element={<Register />} />
@@ -29,7 +40,7 @@ export default function App() {
           <Route
             path="/proprietaire"
             element={
-              <RequireAuth>
+              <RequireAuth requireRole="owner">
                 <OwnerDashboard />
               </RequireAuth>
             }

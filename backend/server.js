@@ -52,6 +52,15 @@ function requireAuth(req, res, next) {
   }
 }
 
+// À utiliser après requireAuth pour restreindre certaines routes aux seuls
+// comptes propriétaires (ex. publication d'annonces, revenus).
+function requireOwner(req, res, next) {
+  if (req.user.role !== "owner") {
+    return res.status(403).json({ error: "Réservé aux comptes propriétaires" });
+  }
+  next();
+}
+
 function issueToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -61,13 +70,14 @@ function issueToken(user) {
 }
 
 app.post("/api/auth/register", async (req, res) => {
-  const { email, password, name } = req.body;
+  const { email, password, name, role } = req.body;
   if (!email || !password || !name) {
     return res.status(400).json({ error: "Email, mot de passe et nom sont requis" });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères" });
   }
+  const finalRole = role === "traveler" ? "traveler" : "owner";
 
   const normalizedEmail = email.toLowerCase();
   const existing = await queryOne("SELECT id FROM users WHERE email = $1", [normalizedEmail]);
@@ -78,11 +88,11 @@ app.post("/api/auth/register", async (req, res) => {
   const id = crypto.randomUUID();
   const passwordHash = await bcrypt.hash(password, 10);
   await query(
-    `INSERT INTO users (id, email, password_hash, name, role) VALUES ($1, $2, $3, $4, 'owner')`,
-    [id, normalizedEmail, passwordHash, name]
+    `INSERT INTO users (id, email, password_hash, name, role) VALUES ($1, $2, $3, $4, $5)`,
+    [id, normalizedEmail, passwordHash, name, finalRole]
   );
 
-  const user = { id, email: normalizedEmail, name, role: "owner" };
+  const user = { id, email: normalizedEmail, name, role: finalRole };
   res.status(201).json({ token: issueToken(user), user });
 });
 
@@ -189,7 +199,7 @@ app.post("/api/auth/reset-password", async (req, res) => {
  * owner_payouts) — il sert à préparer l'automatisation future via
  * Kkiapay Push, une fois sa documentation API confirmée.
  */
-app.post("/api/auth/mobile-money", requireAuth, async (req, res) => {
+app.post("/api/auth/mobile-money", requireAuth, requireOwner, async (req, res) => {
   const { mobileMoneyNumber } = req.body;
 
   // Format international simple : indicatif + numéro, chiffres uniquement,
@@ -227,7 +237,7 @@ app.get("/api/properties/:slug", async (req, res) => {
   res.json(property);
 });
 
-app.post("/api/properties", requireAuth, async (req, res) => {
+app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
   const { title, city, pricePerNight, guests, beds, lat, lng, tag, description, photoUrls, videoUrl } = req.body;
   const ownerId = req.user.id;
   const ownerName = req.user.name;
@@ -281,7 +291,7 @@ app.post("/api/properties", requireAuth, async (req, res) => {
  * vérifie que owner_id correspond à l'utilisateur authentifié avant de
  * supprimer quoi que ce soit.
  */
-app.delete("/api/properties/:slug", requireAuth, async (req, res) => {
+app.delete("/api/properties/:slug", requireAuth, requireOwner, async (req, res) => {
   const property = await queryOne("SELECT * FROM properties WHERE slug = $1", [req.params.slug]);
   if (!property) return res.status(404).json({ error: "Logement introuvable" });
   if (property.owner_id !== req.user.id) {
@@ -343,8 +353,8 @@ app.get("/api/properties/:slug/availability", async (req, res) => {
   });
 });
 
-app.post("/api/bookings/initiate", async (req, res) => {
-  const { propertyId, checkIn, checkOut, travelerEmail } = req.body;
+app.post("/api/bookings/initiate", requireAuth, async (req, res) => {
+  const { propertyId, checkIn, checkOut } = req.body;
   const property = await getPropertyBySlug(propertyId);
 
   if (!property || !checkIn || !checkOut) {
@@ -371,20 +381,23 @@ app.post("/api/bookings/initiate", async (req, res) => {
 
   await query(
     `INSERT INTO bookings
-      (id, property_id, owner_id, traveler_email, check_in, check_out, nights, amount_total, commission_amount, payout_amount, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending')`,
-    [bookingId, property.slug, property.owner_id, travelerEmail || null, checkIn, checkOut, nights, amountTotal, commissionAmount, payoutAmount]
+      (id, property_id, owner_id, traveler_id, traveler_email, check_in, check_out, nights, amount_total, commission_amount, payout_amount, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending')`,
+    [bookingId, property.slug, property.owner_id, req.user.id, req.user.email, checkIn, checkOut, nights, amountTotal, commissionAmount, payoutAmount]
   );
 
   res.json({ bookingId, amountTotal, nights, publicKey: process.env.KKIAPAY_PUBLIC_KEY });
 });
 
-app.post("/api/bookings/:id/confirm", async (req, res) => {
+app.post("/api/bookings/:id/confirm", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { transactionId } = req.body;
 
   const booking = await queryOne("SELECT * FROM bookings WHERE id = $1", [id]);
   if (!booking) return res.status(404).json({ error: "Reservation introuvable" });
+  if (booking.traveler_id && booking.traveler_id !== req.user.id) {
+    return res.status(403).json({ error: "Cette réservation ne t'appartient pas" });
+  }
   if (booking.status === "paid") return res.json({ status: "paid" }); // idempotent
 
   try {
@@ -423,18 +436,18 @@ app.post("/api/bookings/:id/confirm", async (req, res) => {
 /* Espace propriétaire                                                 */
 /* ------------------------------------------------------------------ */
 
-app.get("/api/owners/me/properties", requireAuth, async (req, res) => {
+app.get("/api/owners/me/properties", requireAuth, requireOwner, async (req, res) => {
   const rows = await query("SELECT * FROM properties WHERE owner_id = $1 ORDER BY created_at DESC", [req.user.id]);
   res.json(rows);
 });
 
-app.get("/api/owners/me/balance", requireAuth, async (req, res) => {
+app.get("/api/owners/me/balance", requireAuth, requireOwner, async (req, res) => {
   const rows = await query("SELECT * FROM owner_payouts WHERE owner_id = $1 AND status = 'owed'", [req.user.id]);
   const total = rows.reduce((sum, r) => sum + r.amount, 0);
   res.json({ ownerId: req.user.id, amountOwed: total, bookings: rows });
 });
 
-app.post("/api/owners/me/mark-paid", requireAuth, async (req, res) => {
+app.post("/api/owners/me/mark-paid", requireAuth, requireOwner, async (req, res) => {
   await query(
     `UPDATE owner_payouts SET status = 'transferred', transferred_at = now() WHERE owner_id = $1 AND status = 'owed'`,
     [req.user.id]

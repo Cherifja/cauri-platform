@@ -3,7 +3,7 @@ import { useAuth } from "../lib/AuthContext.jsx";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-20 bg-ink border-b border-ink2">
@@ -14,17 +14,39 @@ export default function Header() {
             Bénin
           </span>
         </Link>
-        {/* Le lien vers l'espace propriétaire n'apparaît ici que si un
+
+        {/* Le lien vers l'espace propriétaire n'apparaît que si un
             propriétaire est déjà connecté (pour qu'il retrouve son tableau
-            de bord facilement). Pour un visiteur non connecté, cet espace
-            n'est volontairement pas mis en avant dans la navigation
-            principale — voir le petit lien en bas de page (Footer). */}
-        {user && (
+            de bord facilement) — il n'est jamais mis en avant pour un
+            simple visiteur. Le compte voyageur, lui, est visible pour tous
+            puisque c'est l'espace destiné aux clients de la plateforme. */}
+        {user?.role === "owner" && (
           <button
             onClick={() => navigate("/proprietaire")}
             className="text-[11px] md:text-xs px-3 py-1.5 rounded-full bg-ink2 text-sandDeep hover:text-cream"
           >
             {user.name}
+          </button>
+        )}
+
+        {user?.role === "traveler" && (
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] md:text-xs text-sandDeep">{user.name}</span>
+            <button
+              onClick={logout}
+              className="text-[11px] md:text-xs px-3 py-1.5 rounded-full bg-ink2 text-sandDeep hover:text-cream"
+            >
+              Déconnexion
+            </button>
+          </div>
+        )}
+
+        {!user && (
+          <button
+            onClick={() => navigate("/connexion")}
+            className="text-[11px] md:text-xs px-3 py-1.5 rounded-full bg-ink2 text-sandDeep hover:text-cream"
+          >
+            Se connecter
           </button>
         )}
       </div>

@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   id TEXT PRIMARY KEY,
   property_id TEXT NOT NULL REFERENCES properties(slug),
   owner_id TEXT NOT NULL,
+  traveler_id TEXT REFERENCES users(id),
   traveler_email TEXT,
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
