@@ -4,12 +4,21 @@ const nodemailer = require("nodemailer");
 // d'application" (jamais le vrai mot de passe Gmail — voir .env.example
 // pour la procédure de création). Simple et gratuit pour un volume
 // d'emails modéré comme celui d'une plateforme qui démarre.
+//
+// Configuration explicite (plutôt que `service: "gmail"`) avec `family: 4`
+// pour forcer IPv4 : sur Render (plan gratuit), les connexions sortantes
+// en IPv6 échouent parfois silencieusement par timeout — le même problème
+// rencontré avec la connexion directe à Supabase, résolu de la même façon.
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD,
   },
+  family: 4,
+  connectionTimeout: 15000,
 });
 
 async function sendPasswordResetEmail({ to, name, resetUrl }) {
