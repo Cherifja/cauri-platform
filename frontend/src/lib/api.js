@@ -46,7 +46,7 @@ export const api = {
   getProperty: (slug) => request(`/api/properties/${slug}`),
   getAvailability: (slug) => request(`/api/properties/${slug}/availability`),
   createProperty: (payload) =>
-    request("/api/properties", { method: "POST", body: JSON.stringify(payload) }),
+    request("/api/properties", { method: "POST", body: JSON.stringify(payload) }), // payload peut inclure photoUrls (tableau) et videoUrl
   ownerProperties: () => request("/api/owners/me/properties"),
   ownerBalance: () => request("/api/owners/me/balance"),
   saveMobileMoneyNumber: (mobileMoneyNumber) =>

@@ -31,6 +31,7 @@ export default function PropertyDetail() {
     );
 
   const mapsUrl = mapsDirectionsUrl(property.lat, property.lng);
+  const photos = property.photo_urls || [];
 
   return (
     <div className="bg-cream min-h-full">
@@ -38,9 +39,41 @@ export default function PropertyDetail() {
         <button onClick={() => navigate(-1)} className="text-xs mb-4 text-ink2">
           ← Retour
         </button>
-        <div className="rounded-2xl overflow-hidden mb-4">
-          <MapPreview tag={property.tag} className="h-40 md:h-72" />
-        </div>
+
+        {photos.length > 0 ? (
+          <div className="mb-4">
+            <img
+              src={photos[0]}
+              alt={property.title}
+              className="w-full h-56 md:h-80 object-cover rounded-2xl"
+            />
+            {photos.length > 1 && (
+              <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+                {photos.slice(1).map((url, i) => (
+                  <img
+                    key={i}
+                    src={url}
+                    alt={`${property.title} ${i + 2}`}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl overflow-hidden mb-4">
+            <MapPreview tag={property.tag} className="h-40 md:h-72" />
+          </div>
+        )}
+
+        {property.video_url && (
+          <video
+            src={property.video_url}
+            controls
+            className="w-full rounded-2xl mb-4 bg-black"
+          />
+        )}
+
         <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">
           {property.tag}
         </span>

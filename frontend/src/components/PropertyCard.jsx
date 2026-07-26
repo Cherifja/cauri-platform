@@ -3,12 +3,17 @@ import MapPreview from "./MapPreview.jsx";
 import { fmt } from "../lib/api.js";
 
 export default function PropertyCard({ property }) {
+  const coverPhoto = property.photo_urls?.[0];
   return (
     <Link
       to={`/logement/${property.slug}`}
       className="text-left rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform block bg-white border border-sandDeep"
     >
-      <MapPreview tag={property.tag} />
+      {coverPhoto ? (
+        <img src={coverPhoto} alt={property.title} className="w-full h-40 object-cover" />
+      ) : (
+        <MapPreview tag={property.tag} />
+      )}
       <div className="p-4">
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">

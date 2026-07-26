@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS properties (
   lng DOUBLE PRECISION NOT NULL,
   tag TEXT,
   description TEXT,
+  photo_urls TEXT[] DEFAULT '{}',
+  video_url TEXT,
   owner_id TEXT NOT NULL REFERENCES users(id),
   owner_name TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()

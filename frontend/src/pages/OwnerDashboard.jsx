@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { api, fmt } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { mediaStorage } from "../lib/mediaStorage.js";
+
+const MAX_PHOTOS = 8;
 
 export default function OwnerDashboard() {
   const { user, logout } = useAuth();
@@ -8,7 +11,11 @@ export default function OwnerDashboard() {
   const [properties, setProperties] = useState([]);
   const [balance, setBalance] = useState(null);
   const [form, setForm] = useState({ title: "", city: "", price: "", guests: 2, beds: 1, desc: "" });
+  const [photoFiles, setPhotoFiles] = useState([]); // File[]
+  const [videoFile, setVideoFile] = useState(null); // File | null
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState(""); // texte affiché pendant l'envoi
+  const [formError, setFormError] = useState("");
   const [momoNumber, setMomoNumber] = useState("");
   const [momoStatus, setMomoStatus] = useState(""); // "" | "saving" | "saved" | "error"
 
@@ -21,11 +28,43 @@ export default function OwnerDashboard() {
     api.ownerBalance().then(setBalance).catch(() => {});
   }, []);
 
+  function handlePhotoChange(e) {
+    const files = Array.from(e.target.files || []);
+    setPhotoFiles(files.slice(0, MAX_PHOTOS));
+  }
+
   async function submit(e) {
     e.preventDefault();
+    setFormError("");
     if (!form.title || !form.city || !form.price) return;
+
+    if ((photoFiles.length > 0 || videoFile) && !mediaStorage.isConfigured()) {
+      setFormError(
+        "L'envoi de photos/vidéo n'est pas encore configuré sur ce site (VITE_SUPABASE_URL manquant). Tu peux publier l'annonce sans média pour l'instant."
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
+      let photoUrls = [];
+      let videoUrl = null;
+
+      if (photoFiles.length > 0) {
+        setUploadStatus(`Envoi des photos (0/${photoFiles.length})…`);
+        for (let i = 0; i < photoFiles.length; i++) {
+          const url = await mediaStorage.uploadPhoto(photoFiles[i], user.id);
+          photoUrls.push(url);
+          setUploadStatus(`Envoi des photos (${i + 1}/${photoFiles.length})…`);
+        }
+      }
+
+      if (videoFile) {
+        setUploadStatus("Envoi de la vidéo…");
+        videoUrl = await mediaStorage.uploadVideo(videoFile, user.id);
+      }
+
+      setUploadStatus("Publication de l'annonce…");
       await api.createProperty({
         title: form.title,
         city: form.city,
@@ -33,14 +72,21 @@ export default function OwnerDashboard() {
         guests: Number(form.guests),
         beds: Number(form.beds),
         description: form.desc,
+        photoUrls,
+        videoUrl,
       });
+
       setForm({ title: "", city: "", price: "", guests: 2, beds: 1, desc: "" });
+      setPhotoFiles([]);
+      setVideoFile(null);
       loadProperties();
       setTab("annonces");
     } catch (err) {
       console.error(err);
+      setFormError(err.message || "Une erreur est survenue lors de la publication.");
     } finally {
       setSubmitting(false);
+      setUploadStatus("");
     }
   }
 
@@ -104,11 +150,20 @@ export default function OwnerDashboard() {
               key={p.id}
               className="rounded-2xl p-4 flex items-center gap-3 bg-white border border-sandDeep"
             >
-              <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-lagoon" />
+              {p.photo_urls && p.photo_urls.length > 0 ? (
+                <img
+                  src={p.photo_urls[0]}
+                  alt={p.title}
+                  className="w-14 h-14 rounded-xl flex-shrink-0 object-cover"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-xl flex-shrink-0 bg-lagoon" />
+              )}
               <div className="flex-1">
                 <p className="text-sm font-medium text-ink900">{p.title}</p>
                 <p className="text-xs text-ink2">
                   {p.city} · {fmt(p.price_per_night)}/nuit
+                  {p.photo_urls?.length > 0 && ` · ${p.photo_urls.length} photo${p.photo_urls.length > 1 ? "s" : ""}`}
                 </p>
               </div>
               <span className="text-[10px] px-2 py-1 rounded-full bg-sand text-green">Active</span>
@@ -224,15 +279,58 @@ export default function OwnerDashboard() {
             rows={3}
             className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
           />
+
+          <div className="rounded-xl p-4 bg-sand">
+            <label className="block text-xs uppercase tracking-wide mb-2 text-ink2">
+              Photos (jusqu'à {MAX_PHOTOS}, 8 Mo max chacune)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoChange}
+              className="text-xs text-ink900 w-full"
+            />
+            {photoFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {photoFiles.map((file, i) => (
+                  <img
+                    key={i}
+                    src={URL.createObjectURL(file)}
+                    alt={`Aperçu ${i + 1}`}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-xl p-4 bg-sand">
+            <label className="block text-xs uppercase tracking-wide mb-2 text-ink2">
+              Vidéo (optionnel, 100 Mo max)
+            </label>
+            <input
+              type="file"
+              accept="video/*"
+              onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+              className="text-xs text-ink900 w-full"
+            />
+            {videoFile && <p className="text-xs mt-2 text-ink2">Sélectionnée : {videoFile.name}</p>}
+          </div>
+
           <p className="text-[11px] text-ink2">
             Vous recevrez 88% du montant de chaque réservation, le reste (12%) va à la plateforme.
           </p>
+
+          {formError && <p className="text-xs text-clay">{formError}</p>}
+          {uploadStatus && <p className="text-xs text-ink2">{uploadStatus}</p>}
+
           <button
             type="submit"
             disabled={submitting}
             className="py-3 rounded-xl text-sm font-medium bg-clay text-cream disabled:opacity-70"
           >
-            {submitting ? "Publication…" : "Publier l'annonce"}
+            {submitting ? uploadStatus || "Publication…" : "Publier l'annonce"}
           </button>
         </form>
       )}

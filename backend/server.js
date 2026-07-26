@@ -228,13 +228,21 @@ app.get("/api/properties/:slug", async (req, res) => {
 });
 
 app.post("/api/properties", requireAuth, async (req, res) => {
-  const { title, city, pricePerNight, guests, beds, lat, lng, tag, description } = req.body;
+  const { title, city, pricePerNight, guests, beds, lat, lng, tag, description, photoUrls, videoUrl } = req.body;
   const ownerId = req.user.id;
   const ownerName = req.user.name;
 
   if (!title || !city || !pricePerNight) {
     return res.status(400).json({ error: "Champs obligatoires manquants" });
   }
+
+  // On ne garde que des chaînes non vides, et on limite à 10 photos par
+  // annonce pour éviter tout abus (l'upload lui-même se fait directement
+  // vers Supabase Storage depuis le navigateur, ce endpoint ne reçoit que
+  // les liens déjà téléversés).
+  const cleanPhotoUrls = Array.isArray(photoUrls)
+    ? photoUrls.filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 10)
+    : [];
 
   const id = crypto.randomUUID();
   const slug = `${title}-${id.slice(0, 6)}`
@@ -244,9 +252,25 @@ app.post("/api/properties", requireAuth, async (req, res) => {
     .replace(/(^-|-$)/g, "");
 
   await query(
-    `INSERT INTO properties (id, slug, title, city, price_per_night, guests, beds, lat, lng, tag, description, owner_id, owner_name)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-    [id, slug, title, city, Number(pricePerNight), Number(guests) || 1, Number(beds) || 1, Number(lat) || 6.37, Number(lng) || 2.39, tag || "Nouveau", description || "", ownerId, ownerName]
+    `INSERT INTO properties (id, slug, title, city, price_per_night, guests, beds, lat, lng, tag, description, photo_urls, video_url, owner_id, owner_name)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+    [
+      id,
+      slug,
+      title,
+      city,
+      Number(pricePerNight),
+      Number(guests) || 1,
+      Number(beds) || 1,
+      Number(lat) || 6.37,
+      Number(lng) || 2.39,
+      tag || "Nouveau",
+      description || "",
+      cleanPhotoUrls,
+      typeof videoUrl === "string" && videoUrl.startsWith("http") ? videoUrl : null,
+      ownerId,
+      ownerName,
+    ]
   );
 
   res.status(201).json({ id, slug });

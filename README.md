@@ -70,8 +70,13 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
   mots de passe hashés (bcrypt), sessions par token JWT (7 jours), routes
   propriétaire protégées côté serveur (`requireAuth`) — un propriétaire ne
   peut jamais consulter les annonces ou revenus d'un autre
-- **Mot de passe oublié** : email de réinitialisation envoyé via Gmail
-  (`GMAIL_USER` / `GMAIL_APP_PASSWORD`), lien à usage unique valable 1 heure
+- **Mot de passe oublié** : email de réinitialisation envoyé via l'API HTTP
+  de Brevo (`BREVO_API_KEY` / `BREVO_SENDER_EMAIL`), lien à usage unique
+  valable 1 heure
+- **Photos et vidéo des annonces** : upload direct depuis le navigateur vers
+  Supabase Storage (`VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` côté
+  frontend), jusqu'à 8 photos + 1 vidéo par annonce, affichées en galerie
+  sur la fiche logement
 - Espace propriétaire : publication d'annonces, suivi des revenus en attente de virement
 - Prêt à déployer : base PostgreSQL (compatible hébergement serverless),
   configuration Render (`render.yaml`) et Vercel (`frontend/vercel.json`)
