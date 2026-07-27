@@ -54,6 +54,11 @@ export default function TravelerLogin() {
           className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
           required
         />
+        <p className="text-xs text-right -mt-1">
+          <Link to="/mot-de-passe-oublie" className="text-ink2 underline">
+            Mot de passe oublié ?
+          </Link>
+        </p>
 
         {error && <p className="text-xs text-clay">{error}</p>}
 

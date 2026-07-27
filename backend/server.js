@@ -144,7 +144,9 @@ app.post("/api/auth/forgot-password", async (req, res) => {
     );
 
     const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").split(",")[0];
-    const resetUrl = `${frontendUrl}/proprietaire/reinitialiser-mot-de-passe?token=${rawToken}`;
+    const resetPath =
+      user.role === "owner" ? "/proprietaire/reinitialiser-mot-de-passe" : "/reinitialiser-mot-de-passe";
+    const resetUrl = `${frontendUrl}${resetPath}?token=${rawToken}`;
 
     try {
       await sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl });

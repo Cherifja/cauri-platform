@@ -13,6 +13,8 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import TravelerLogin from "./pages/TravelerLogin.jsx";
 import TravelerRegister from "./pages/TravelerRegister.jsx";
+import TravelerForgotPassword from "./pages/TravelerForgotPassword.jsx";
+import TravelerResetPassword from "./pages/TravelerResetPassword.jsx";
 
 export default function App() {
   return (
@@ -24,6 +26,8 @@ export default function App() {
           <Route path="/logement/:slug" element={<PropertyDetail />} />
           <Route path="/connexion" element={<TravelerLogin />} />
           <Route path="/inscription" element={<TravelerRegister />} />
+          <Route path="/mot-de-passe-oublie" element={<TravelerForgotPassword />} />
+          <Route path="/reinitialiser-mot-de-passe" element={<TravelerResetPassword />} />
           <Route
             path="/logement/:slug/reserver"
             element={
