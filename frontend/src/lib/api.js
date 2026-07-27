@@ -59,6 +59,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ transactionId }),
     }),
+  getReviews: (slug) => request(`/api/properties/${slug}/reviews`),
+  myBookings: () => request("/api/bookings/mine"),
+  submitReview: (bookingId, { rating, comment }) =>
+    request(`/api/bookings/${bookingId}/review`, {
+      method: "POST",
+      body: JSON.stringify({ rating, comment }),
+    }),
 };
 
 export function fmt(n) {

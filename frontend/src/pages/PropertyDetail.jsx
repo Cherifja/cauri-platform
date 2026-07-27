@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import MapPreview from "../components/MapPreview.jsx";
+import { StarDisplay } from "../components/Stars.jsx";
 import { api, fmt, mapsDirectionsUrl } from "../lib/api.js";
 
 export default function PropertyDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [property, setProperty] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [status, setStatus] = useState("loading");
 
   useEffect(() => {
-    api
-      .getProperty(slug)
-      .then((data) => {
-        setProperty(data);
+    Promise.all([api.getProperty(slug), api.getReviews(slug)])
+      .then(([propertyData, reviewsData]) => {
+        setProperty(propertyData);
+        setReviews(reviewsData);
         setStatus("ready");
       })
       .catch(() => setStatus("error"));
@@ -80,6 +82,14 @@ export default function PropertyDetail() {
         <h1 className="text-2xl md:text-3xl mt-2 mb-1 font-display font-semibold text-ink900">
           {property.title}
         </h1>
+        {property.review_count > 0 && (
+          <div className="flex items-center gap-2 mb-1">
+            <StarDisplay rating={property.avg_rating} />
+            <span className="text-xs text-ink2">
+              {property.avg_rating.toFixed(1)} ({property.review_count} avis)
+            </span>
+          </div>
+        )}
         <p className="text-sm mb-4 text-ink2">
           {property.city} · {property.guests} voyageurs · {property.beds} chambres
         </p>
@@ -95,7 +105,7 @@ export default function PropertyDetail() {
           <span className="text-gold">↗</span>
         </a>
 
-        <div className="flex items-center justify-between rounded-2xl p-4 bg-white border border-sandDeep">
+        <div className="flex items-center justify-between rounded-2xl p-4 bg-white border border-sandDeep mb-8">
           <div>
             <div className="text-lg font-semibold text-clay">{fmt(property.price_per_night)}</div>
             <div className="text-xs text-ink2">par nuit</div>
@@ -106,6 +116,30 @@ export default function PropertyDetail() {
           >
             Réserver
           </button>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-display font-semibold text-ink900 mb-3">
+            Avis des voyageurs {reviews.length > 0 && `(${reviews.length})`}
+          </h2>
+          {reviews.length === 0 ? (
+            <p className="text-sm text-ink2">Aucun avis pour l'instant.</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {reviews.map((r) => (
+                <div key={r.id} className="rounded-xl p-4 bg-white border border-sandDeep">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-ink900">{r.traveler_name}</span>
+                    <StarDisplay rating={r.rating} />
+                  </div>
+                  {r.comment && <p className="text-sm text-ink2">{r.comment}</p>}
+                  <p className="text-[11px] text-ink2 mt-1">
+                    {new Date(r.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long" })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

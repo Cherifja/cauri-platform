@@ -30,7 +30,10 @@ export default function Header() {
         )}
 
         {user?.role === "traveler" && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <Link to="/mes-reservations" className="text-[11px] md:text-xs text-sandDeep hover:text-cream underline underline-offset-2">
+              Mes réservations
+            </Link>
             <span className="text-[11px] md:text-xs text-sandDeep">{user.name}</span>
             <button
               onClick={logout}

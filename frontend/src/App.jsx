@@ -15,6 +15,7 @@ import TravelerLogin from "./pages/TravelerLogin.jsx";
 import TravelerRegister from "./pages/TravelerRegister.jsx";
 import TravelerForgotPassword from "./pages/TravelerForgotPassword.jsx";
 import TravelerResetPassword from "./pages/TravelerResetPassword.jsx";
+import MyBookings from "./pages/MyBookings.jsx";
 
 export default function App() {
   return (
@@ -28,6 +29,14 @@ export default function App() {
           <Route path="/inscription" element={<TravelerRegister />} />
           <Route path="/mot-de-passe-oublie" element={<TravelerForgotPassword />} />
           <Route path="/reinitialiser-mot-de-passe" element={<TravelerResetPassword />} />
+          <Route
+            path="/mes-reservations"
+            element={
+              <RequireAuth redirectTo="/connexion" requireRole="traveler">
+                <MyBookings />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/logement/:slug/reserver"
             element={

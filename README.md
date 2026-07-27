@@ -82,6 +82,13 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
   l'identité du voyageur connecté (`traveler_id`), jamais à un email saisi
   librement ; après connexion, le voyageur est renvoyé exactement là où il
   s'était arrêté (ex. sa réservation en cours)
+- **Avis voyageurs** : notes (1 à 5 étoiles) et commentaires affichés sur
+  chaque fiche logement, avec note moyenne calculée automatiquement.
+  Un avis ne peut être laissé que par un voyageur ayant réellement payé et
+  terminé son séjour (vérifié côté serveur — impossible de laisser un avis
+  sans réservation payée passée), un seul avis par réservation. Page
+  "Mes réservations" (`/mes-reservations`) pour que le voyageur retrouve
+  son historique et laisse ses avis
 - Espace propriétaire : publication d'annonces, suivi des revenus en attente de virement
 - Prêt à déployer : base PostgreSQL (compatible hébergement serverless),
   configuration Render (`render.yaml`) et Vercel (`frontend/vercel.json`)

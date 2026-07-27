@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import MapPreview from "./MapPreview.jsx";
+import { StarDisplay } from "./Stars.jsx";
 import { fmt } from "../lib/api.js";
 
 export default function PropertyCard({ property }) {
@@ -28,6 +29,12 @@ export default function PropertyCard({ property }) {
         <p className="text-xs mt-1 text-ink2">
           {property.city} · {property.guests} voyageurs · {property.beds} chambres
         </p>
+        {property.review_count > 0 && (
+          <div className="flex items-center gap-1 mt-1">
+            <StarDisplay rating={property.avg_rating} size="text-xs" />
+            <span className="text-xs text-ink2">({property.review_count})</span>
+          </div>
+        )}
       </div>
     </Link>
   );

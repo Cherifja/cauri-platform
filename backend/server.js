@@ -61,6 +61,13 @@ function requireOwner(req, res, next) {
   next();
 }
 
+function requireTraveler(req, res, next) {
+  if (req.user.role !== "traveler") {
+    return res.status(403).json({ error: "Réservé aux comptes voyageurs" });
+  }
+  next();
+}
+
 function issueToken(user) {
   return jwt.sign(
     { id: user.id, email: user.email, name: user.name, role: user.role },
@@ -225,11 +232,32 @@ app.post("/api/auth/mobile-money", requireAuth, requireOwner, async (req, res) =
 /* ------------------------------------------------------------------ */
 
 function getPropertyBySlug(slug) {
-  return queryOne("SELECT * FROM properties WHERE slug = $1", [slug]);
+  return queryOne(
+    `SELECT p.*,
+            COALESCE(r.avg_rating, 0)::float AS avg_rating,
+            COALESCE(r.review_count, 0)::int AS review_count
+     FROM properties p
+     LEFT JOIN (
+       SELECT property_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count
+       FROM reviews GROUP BY property_id
+     ) r ON r.property_id = p.slug
+     WHERE p.slug = $1`,
+    [slug]
+  );
 }
 
 app.get("/api/properties", async (req, res) => {
-  const rows = await query("SELECT * FROM properties ORDER BY created_at DESC");
+  const rows = await query(
+    `SELECT p.*,
+            COALESCE(r.avg_rating, 0)::float AS avg_rating,
+            COALESCE(r.review_count, 0)::int AS review_count
+     FROM properties p
+     LEFT JOIN (
+       SELECT property_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count
+       FROM reviews GROUP BY property_id
+     ) r ON r.property_id = p.slug
+     ORDER BY p.created_at DESC`
+  );
   res.json(rows);
 });
 
@@ -315,6 +343,84 @@ app.delete("/api/properties/:slug", requireAuth, requireOwner, async (req, res) 
 
   await query("DELETE FROM properties WHERE slug = $1", [property.slug]);
   res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ */
+/* Avis                                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Liste publique des avis d'un logement, les plus récents d'abord.
+ */
+app.get("/api/properties/:slug/reviews", async (req, res) => {
+  const rows = await query(
+    `SELECT id, traveler_name, rating, comment, created_at
+     FROM reviews WHERE property_id = $1 ORDER BY created_at DESC`,
+    [req.params.slug]
+  );
+  res.json(rows);
+});
+
+/**
+ * Réservations passées et payées du voyageur connecté, avec l'indication
+ * de savoir si un avis a déjà été laissé pour chacune. Sert à afficher
+ * "Laisser un avis" uniquement là où c'est pertinent.
+ */
+app.get("/api/bookings/mine", requireAuth, requireTraveler, async (req, res) => {
+  const rows = await query(
+    `SELECT b.id AS booking_id, b.property_id, b.check_in, b.check_out, b.status,
+            p.title AS property_title, p.photo_urls,
+            (r.id IS NOT NULL) AS already_reviewed
+     FROM bookings b
+     JOIN properties p ON p.slug = b.property_id
+     LEFT JOIN reviews r ON r.booking_id = b.id
+     WHERE b.traveler_id = $1
+     ORDER BY b.check_in DESC`,
+    [req.user.id]
+  );
+  res.json(rows);
+});
+
+/**
+ * Publie un avis pour une réservation précise. Vérifications strictes
+ * côté serveur (jamais côté client seul) : la réservation appartient bien
+ * au voyageur connecté, elle est payée, le séjour est terminé (check_out
+ * dans le passé), et aucun avis n'existe déjà pour cette réservation —
+ * c'est ce qui empêche les faux avis.
+ */
+app.post("/api/bookings/:id/review", requireAuth, requireTraveler, async (req, res) => {
+  const { rating, comment } = req.body;
+  const ratingNum = Number(rating);
+
+  if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+    return res.status(400).json({ error: "La note doit être un nombre entier entre 1 et 5" });
+  }
+
+  const booking = await queryOne("SELECT * FROM bookings WHERE id = $1", [req.params.id]);
+  if (!booking) return res.status(404).json({ error: "Réservation introuvable" });
+  if (booking.traveler_id !== req.user.id) {
+    return res.status(403).json({ error: "Cette réservation ne t'appartient pas" });
+  }
+  if (booking.status !== "paid") {
+    return res.status(409).json({ error: "Seules les réservations payées peuvent être notées" });
+  }
+  const checkOutDate = new Date(booking.check_out);
+  if (checkOutDate > new Date()) {
+    return res.status(409).json({ error: "Tu ne peux laisser un avis qu'après la fin de ton séjour" });
+  }
+
+  const existing = await queryOne("SELECT id FROM reviews WHERE booking_id = $1", [booking.id]);
+  if (existing) {
+    return res.status(409).json({ error: "Tu as déjà laissé un avis pour ce séjour" });
+  }
+
+  await query(
+    `INSERT INTO reviews (booking_id, property_id, traveler_id, traveler_name, rating, comment)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [booking.id, booking.property_id, req.user.id, req.user.name, ratingNum, comment || null]
+  );
+
+  res.status(201).json({ ok: true });
 });
 
 /* ------------------------------------------------------------------ */
