@@ -256,6 +256,18 @@ app.get("/api/properties", async (req, res) => {
        SELECT property_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count
        FROM reviews GROUP BY property_id
      ) r ON r.property_id = p.slug
+     WHERE NOT EXISTS (
+       -- Un logement est masqué de la liste tant qu'un séjour payé y est en
+       -- cours aujourd'hui (check_in <= aujourd'hui < check_out). Il redevient
+       -- visible automatiquement dès que ce séjour se termine. La fiche
+       -- détaillée (accès direct par lien) reste toujours consultable, pour
+       -- ne pas casser un lien déjà partagé.
+       SELECT 1 FROM bookings b
+       WHERE b.property_id = p.slug
+         AND b.status = 'paid'
+         AND b.check_in <= CURRENT_DATE
+         AND b.check_out > CURRENT_DATE
+     )
      ORDER BY p.created_at DESC`
   );
   res.json(rows);
