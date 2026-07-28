@@ -582,6 +582,31 @@ app.post("/api/owners/me/mark-paid", requireAuth, requireOwner, async (req, res)
 });
 
 const PORT = process.env.PORT || 4000;
+
+// Nettoyage automatique des réservations jamais payées (le voyageur a
+// lancé une réservation puis n'a jamais complété le paiement). On attend
+// bien plus longtemps que la fenêtre de blocage de dates (30 minutes, voir
+// PENDING_HOLD_MINUTES) avant de les supprimer, pour ne jamais risquer
+// d'effacer une réservation dont le paiement serait encore en train
+// d'être vérifié. Aucune réservation payée n'est jamais concernée par ce
+// nettoyage.
+const ABANDONED_BOOKING_CLEANUP_HOURS = 24;
+
+async function cleanupAbandonedBookings() {
+  try {
+    const deleted = await query(
+      `DELETE FROM bookings
+       WHERE status = 'pending' AND created_at < now() - interval '${ABANDONED_BOOKING_CLEANUP_HOURS} hours'
+       RETURNING id`
+    );
+    if (deleted.length > 0) {
+      console.log(`Nettoyage: ${deleted.length} réservation(s) abandonnée(s) supprimée(s).`);
+    }
+  } catch (err) {
+    console.error("Échec du nettoyage des réservations abandonnées:", err.message);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`API paiement en ecoute sur le port ${PORT}`);
   if (!JWT_SECRET || JWT_SECRET === "change_moi_en_production") {
@@ -590,4 +615,6 @@ app.listen(PORT, () => {
         "Définis une vraie valeur secrète dans .env avant tout déploiement réel."
     );
   }
+  cleanupAbandonedBookings();
+  setInterval(cleanupAbandonedBookings, 60 * 60 * 1000); // toutes les heures
 });
