@@ -494,7 +494,13 @@ app.post("/api/bookings/initiate", requireAuth, async (req, res) => {
     [bookingId, property.slug, property.owner_id, req.user.id, req.user.email, checkIn, checkOut, nights, amountTotal, commissionAmount, payoutAmount]
   );
 
-  res.json({ bookingId, amountTotal, nights, publicKey: process.env.KKIAPAY_PUBLIC_KEY });
+  res.json({
+    bookingId,
+    amountTotal,
+    nights,
+    publicKey: process.env.KKIAPAY_PUBLIC_KEY,
+    sandbox: process.env.KKIAPAY_SANDBOX === "true",
+  });
 });
 
 app.post("/api/bookings/:id/confirm", requireAuth, async (req, res) => {

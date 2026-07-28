@@ -107,7 +107,7 @@ export default function Booking() {
     setDateError("");
     setStatus("paying");
     try {
-      const { bookingId, amountTotal, publicKey } = await api.initiateBooking({
+      const { bookingId, amountTotal, publicKey, sandbox } = await api.initiateBooking({
         propertyId: property.slug,
         checkIn,
         checkOut,
@@ -120,7 +120,7 @@ export default function Booking() {
       window.openKkiapayWidget({
         amount: amountTotal,
         key: publicKey,
-        sandbox: true, // passer à false en production
+        sandbox, // suit automatiquement KKIAPAY_SANDBOX défini sur le backend
         data: bookingId,
       });
       setStatus("ready");

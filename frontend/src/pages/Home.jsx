@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PropertyCard from "../components/PropertyCard.jsx";
 import PaymentMethods from "../components/PaymentMethods.jsx";
 import { api } from "../lib/api.js";
@@ -6,6 +6,7 @@ import { api } from "../lib/api.js";
 export default function Home() {
   const [properties, setProperties] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [selectedCity, setSelectedCity] = useState(""); // "" = toutes les villes
 
   useEffect(() => {
     api
@@ -16,6 +17,15 @@ export default function Home() {
       })
       .catch(() => setStatus("error"));
   }, []);
+
+  const cities = useMemo(() => {
+    const unique = [...new Set(properties.map((p) => p.city))];
+    return unique.sort((a, b) => a.localeCompare(b, "fr"));
+  }, [properties]);
+
+  const filteredProperties = selectedCity
+    ? properties.filter((p) => p.city === selectedCity)
+    : properties;
 
   return (
     <div>
@@ -44,15 +54,45 @@ export default function Home() {
           <p className="text-sm text-ink2">Chargement des logements…</p>
         )}
         {status === "error" && (
-          <div className="text-sm text-clay bg-white border border-clay rounded-xl p-4">
-            <p className="font-medium mb-1">Diagnostic de connexion :</p>
-            <p>Adresse contactée : <code className="break-all">{API_BASE}</code></p>
-            <p>Erreur exacte : <code className="break-all">{errorDetail}</code></p>
+          <p className="text-sm text-clay">
+            Impossible de joindre le serveur pour le moment. Réessaie dans un instant.
+          </p>
+        )}
+
+        {status === "ready" && cities.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            <button
+              onClick={() => setSelectedCity("")}
+              className={`text-xs px-4 py-2 rounded-full border ${
+                selectedCity === ""
+                  ? "bg-ink text-cream border-ink"
+                  : "bg-white text-ink2 border-sandDeep"
+              }`}
+            >
+              Toutes les villes
+            </button>
+            {cities.map((city) => (
+              <button
+                key={city}
+                onClick={() => setSelectedCity(city)}
+                className={`text-xs px-4 py-2 rounded-full border ${
+                  selectedCity === city
+                    ? "bg-ink text-cream border-ink"
+                    : "bg-white text-ink2 border-sandDeep"
+                }`}
+              >
+                {city}
+              </button>
+            ))}
           </div>
         )}
 
+        {status === "ready" && filteredProperties.length === 0 && (
+          <p className="text-sm text-ink2">Aucun logement disponible dans cette ville pour le moment.</p>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {properties.map((p) => (
+          {filteredProperties.map((p) => (
             <PropertyCard key={p.id} property={p} />
           ))}
         </div>
