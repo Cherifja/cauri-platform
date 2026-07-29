@@ -52,6 +52,8 @@ export const api = {
   ownerBalance: () => request("/api/owners/me/balance"),
   saveMobileMoneyNumber: (mobileMoneyNumber) =>
     request("/api/auth/mobile-money", { method: "POST", body: JSON.stringify({ mobileMoneyNumber }) }),
+  saveWhatsappNumber: (whatsappNumber) =>
+    request("/api/auth/whatsapp-number", { method: "POST", body: JSON.stringify({ whatsappNumber }) }),
   initiateBooking: (payload) =>
     request("/api/bookings/initiate", { method: "POST", body: JSON.stringify(payload) }),
   confirmBooking: (bookingId, transactionId) =>

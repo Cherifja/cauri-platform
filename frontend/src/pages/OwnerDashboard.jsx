@@ -18,6 +18,8 @@ export default function OwnerDashboard() {
   const [formError, setFormError] = useState("");
   const [momoNumber, setMomoNumber] = useState("");
   const [momoStatus, setMomoStatus] = useState(""); // "" | "saving" | "saved" | "error"
+  const [waNumber, setWaNumber] = useState("");
+  const [waStatus, setWaStatus] = useState(""); // "" | "saving" | "saved" | "error"
   const [deletingSlug, setDeletingSlug] = useState(null);
   const [deleteError, setDeleteError] = useState("");
 
@@ -100,6 +102,17 @@ export default function OwnerDashboard() {
       setMomoStatus("saved");
     } catch (err) {
       setMomoStatus("error");
+    }
+  }
+
+  async function saveWa(e) {
+    e.preventDefault();
+    setWaStatus("saving");
+    try {
+      await api.saveWhatsappNumber(waNumber);
+      setWaStatus("saved");
+    } catch (err) {
+      setWaStatus("error");
     }
   }
 
@@ -245,6 +258,40 @@ export default function OwnerDashboard() {
               Pour l'instant, les versements restent effectués manuellement par
               la plateforme. Ce numéro sera utilisé automatiquement dès que
               l'envoi automatique sera activé.
+            </p>
+          </div>
+
+          <div className="rounded-2xl p-4 mb-4 bg-sand">
+            <p className="text-xs uppercase tracking-wide mb-2 text-ink2">
+              Numéro WhatsApp pour la remise des clés
+            </p>
+            <form onSubmit={saveWa} className="flex gap-2">
+              <input
+                placeholder="Ex. 22997000000"
+                value={waNumber}
+                onChange={(e) => setWaNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                className="flex-1 px-3 py-2 rounded-lg text-sm bg-white border border-sandDeep"
+              />
+              <button
+                type="submit"
+                disabled={waStatus === "saving"}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-clay text-cream disabled:opacity-70"
+              >
+                Enregistrer
+              </button>
+            </form>
+            {waStatus === "saved" && (
+              <p className="text-xs mt-2 text-green">Numéro enregistré.</p>
+            )}
+            {waStatus === "error" && (
+              <p className="text-xs mt-2 text-clay">
+                Format invalide — utilise l'indicatif pays sans le +, ex. 22997000000.
+              </p>
+            )}
+            <p className="text-[11px] mt-2 text-ink2">
+              Après paiement, le voyageur pourra t'écrire directement sur ce
+              numéro pour organiser la remise des clés — le message inclura
+              automatiquement le logement et les dates réservées.
             </p>
           </div>
 

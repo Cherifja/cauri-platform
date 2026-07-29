@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT $t$owner$t$,
   mobile_money_number TEXT,
+  -- Numero WhatsApp du proprietaire (format international, ex. 22997000000),
+  -- utilise pour permettre au voyageur de le contacter directement apres
+  -- paiement afin de coordonner la remise des cles.
+  whatsapp_number TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

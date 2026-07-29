@@ -227,6 +227,23 @@ app.post("/api/auth/mobile-money", requireAuth, requireOwner, async (req, res) =
   res.json({ ok: true, mobileMoneyNumber });
 });
 
+app.post("/api/auth/whatsapp-number", requireAuth, requireOwner, async (req, res) => {
+  const { whatsappNumber } = req.body;
+
+  if (!whatsappNumber || !/^[0-9]{8,15}$/.test(whatsappNumber)) {
+    return res.status(400).json({
+      error: "Numéro invalide. Utilise le format international sans espaces ni +, ex. 22997000000",
+    });
+  }
+
+  await query("UPDATE users SET whatsapp_number = $1 WHERE id = $2", [
+    whatsappNumber,
+    req.user.id,
+  ]);
+
+  res.json({ ok: true, whatsappNumber });
+});
+
 /* ------------------------------------------------------------------ */
 /* Logements                                                           */
 /* ------------------------------------------------------------------ */
@@ -235,12 +252,14 @@ function getPropertyBySlug(slug) {
   return queryOne(
     `SELECT p.*,
             COALESCE(r.avg_rating, 0)::float AS avg_rating,
-            COALESCE(r.review_count, 0)::int AS review_count
+            COALESCE(r.review_count, 0)::int AS review_count,
+            u.whatsapp_number AS owner_whatsapp
      FROM properties p
      LEFT JOIN (
        SELECT property_id, AVG(rating) AS avg_rating, COUNT(*) AS review_count
        FROM reviews GROUP BY property_id
      ) r ON r.property_id = p.slug
+     LEFT JOIN users u ON u.id = p.owner_id
      WHERE p.slug = $1`,
     [slug]
   );
@@ -551,6 +570,9 @@ app.post("/api/bookings/:id/confirm", requireAuth, async (req, res) => {
       amountTotal: booking.amount_total,
       commission: booking.commission_amount,
       payoutDueToOwner: booking.payout_amount,
+      checkIn: booking.check_in,
+      checkOut: booking.check_out,
+      nights: booking.nights,
     });
   } catch (err) {
     console.error("Erreur de verification Kkiapay:", err.message);
