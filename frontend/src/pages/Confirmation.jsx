@@ -21,7 +21,7 @@ export default function Confirmation() {
   const whatsappUrl = property.owner_whatsapp
     ? (() => {
         const message =
-          `Bonjour ${property.owner_name}, je viens de réserver "${property.title}" sur Cauri.\n` +
+          `Bonjour ${property.owner_name}, je viens de réserver "${property.title}" sur StayBenin.\n` +
           `Arrivée : ${formatDate(order.checkIn)}\n` +
           `Départ : ${formatDate(order.checkOut)}\n` +
           `Voyageur : ${user?.name || ""}\n\n` +

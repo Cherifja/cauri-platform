@@ -24,15 +24,15 @@ async function sendPasswordResetEmail({ to, name, resetUrl }) {
       "api-key": apiKey,
     },
     body: JSON.stringify({
-      sender: { name: "Cauri", email: senderEmail },
+      sender: { name: "StayBenin", email: senderEmail },
       to: [{ email: to, name }],
-      subject: "Réinitialisation de votre mot de passe Cauri",
-      textContent: `Bonjour ${name},\n\nVous avez demandé à réinitialiser votre mot de passe sur Cauri.\n\nCliquez sur ce lien pour choisir un nouveau mot de passe (valable 1 heure) :\n${resetUrl}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.\n\n— Cauri`,
+      subject: "Réinitialisation de votre mot de passe StayBenin",
+      textContent: `Bonjour ${name},\n\nVous avez demandé à réinitialiser votre mot de passe sur StayBenin.\n\nCliquez sur ce lien pour choisir un nouveau mot de passe (valable 1 heure) :\n${resetUrl}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.\n\n— StayBenin`,
       htmlContent: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
           <h2 style="color:#12233F;">Réinitialisation de votre mot de passe</h2>
           <p>Bonjour ${name},</p>
-          <p>Vous avez demandé à réinitialiser votre mot de passe sur Cauri.</p>
+          <p>Vous avez demandé à réinitialiser votre mot de passe sur StayBenin.</p>
           <p>
             <a href="${resetUrl}" style="display:inline-block;background:#C1440E;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;">
               Choisir un nouveau mot de passe

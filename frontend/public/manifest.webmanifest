@@ -1,6 +1,6 @@
 {
-  "name": "Cauri — Logements au Bénin",
-  "short_name": "Cauri",
+  "name": "StayBenin — Logements au Bénin",
+  "short_name": "StayBenin",
   "description": "Réservez et payez un logement au Bénin avant votre arrivée.",
   "start_url": "/",
   "scope": "/",
