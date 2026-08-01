@@ -27,7 +27,9 @@ export default function Header() {
       <header className="sticky top-0 z-20 bg-ink border-b border-ink2">
         <div className="flex items-center justify-between px-5 md:px-8 py-4 max-w-6xl mx-auto">
           <Link to="/" className="flex items-center gap-2">
-            <span className="text-xl md:text-2xl font-display font-semibold text-sand">StayBenin</span>
+            <span className="text-xl md:text-2xl font-display font-semibold text-sand">
+              Stay<span className="text-gold">Benin</span>
+            </span>
             <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-gold text-ink900">
               Bénin
             </span>
