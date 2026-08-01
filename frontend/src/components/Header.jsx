@@ -30,9 +30,6 @@ export default function Header() {
             <span className="text-xl md:text-2xl font-display font-semibold text-sand">
               Stay<span className="text-gold">Benin</span>
             </span>
-            <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-gold text-ink900">
-              Bénin
-            </span>
           </Link>
 
           {user ? (
