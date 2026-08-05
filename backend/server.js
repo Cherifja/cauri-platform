@@ -299,11 +299,11 @@ app.get("/api/properties/:slug", async (req, res) => {
 });
 
 app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
-  const { title, city, pricePerNight, guests, beds, lat, lng, tag, description, photoUrls, videoUrl } = req.body;
+  const { title, city, pricePerMonth, guests, beds, lat, lng, tag, description, photoUrls, videoUrl } = req.body;
   const ownerId = req.user.id;
   const ownerName = req.user.name;
 
-  if (!title || !city || !pricePerNight) {
+  if (!title || !city || !pricePerMonth) {
     return res.status(400).json({ error: "Champs obligatoires manquants" });
   }
 
@@ -323,14 +323,14 @@ app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
     .replace(/(^-|-$)/g, "");
 
   await query(
-    `INSERT INTO properties (id, slug, title, city, price_per_night, guests, beds, lat, lng, tag, description, photo_urls, video_url, owner_id, owner_name)
+    `INSERT INTO properties (id, slug, title, city, price_per_month, guests, beds, lat, lng, tag, description, photo_urls, video_url, owner_id, owner_name)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
     [
       id,
       slug,
       title,
       city,
-      Number(pricePerNight),
+      Number(pricePerMonth),
       Number(guests) || 1,
       Number(beds) || 1,
       Number(lat) || 6.37,
@@ -399,7 +399,7 @@ app.get("/api/properties/:slug/reviews", async (req, res) => {
  */
 app.get("/api/bookings/mine", requireAuth, requireTraveler, async (req, res) => {
   const rows = await query(
-    `SELECT b.id AS booking_id, b.property_id, b.check_in, b.check_out, b.status,
+    `SELECT b.id AS booking_id, b.property_id, b.check_in, b.check_out, b.months, b.status,
             p.title AS property_title, p.photo_urls,
             (r.id IS NOT NULL) AS already_reviewed
      FROM bookings b
@@ -474,9 +474,18 @@ function rangesOverlap(aStart, aEnd, bStart, bEnd) {
   return aStart < bEnd && bStart < aEnd;
 }
 
-function nightsBetween(checkIn, checkOut) {
-  const msPerNight = 24 * 60 * 60 * 1000;
-  return Math.round((new Date(checkOut) - new Date(checkIn)) / msPerNight);
+/**
+ * Ajoute un nombre de mois calendaires a une date de depart (format
+ * YYYY-MM-DD), en gerant correctement les fins de mois irregulieres
+ * (ex. 31 janvier + 1 mois = 28/29 fevrier, pas le 3 mars).
+ */
+function addMonths(dateStr, months) {
+  const d = new Date(dateStr + "T00:00:00Z");
+  const targetMonth = d.getUTCMonth() + months;
+  const result = new Date(Date.UTC(d.getUTCFullYear(), targetMonth, 1));
+  const lastDayOfTargetMonth = new Date(Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)).getUTCDate();
+  result.setUTCDate(Math.min(d.getUTCDate(), lastDayOfTargetMonth));
+  return result.toISOString().slice(0, 10);
 }
 
 app.get("/api/properties/:slug/availability", async (req, res) => {
@@ -493,42 +502,42 @@ app.get("/api/properties/:slug/availability", async (req, res) => {
 });
 
 app.post("/api/bookings/initiate", requireAuth, async (req, res) => {
-  const { propertyId, checkIn, checkOut } = req.body;
+  const { propertyId, checkIn, months } = req.body;
   const property = await getPropertyBySlug(propertyId);
 
-  if (!property || !checkIn || !checkOut) {
+  const monthsInt = Number(months);
+
+  if (!property || !checkIn || !Number.isInteger(monthsInt) || monthsInt < 1 || monthsInt > 24) {
     return res.status(400).json({ error: "Requete invalide" });
   }
 
-  const nights = nightsBetween(checkIn, checkOut);
-  if (nights < 1) {
-    return res.status(400).json({ error: "Dates invalides : la date de depart doit suivre l'arrivee" });
-  }
+  const checkOut = addMonths(checkIn, monthsInt);
 
   const existing = await activeBookingsForProperty(property.slug);
   const hasConflict = existing.some((b) =>
     rangesOverlap(checkIn, checkOut, b.check_in.toISOString().slice(0, 10), b.check_out.toISOString().slice(0, 10))
   );
   if (hasConflict) {
-    return res.status(409).json({ error: "Ces dates ne sont plus disponibles pour ce logement" });
+    return res.status(409).json({ error: "Cette période n'est plus disponible pour ce logement" });
   }
 
-  const amountTotal = property.price_per_night * nights;
+  const amountTotal = property.price_per_month * monthsInt;
   const commissionAmount = Math.round(amountTotal * COMMISSION_RATE);
   const payoutAmount = amountTotal - commissionAmount;
   const bookingId = crypto.randomUUID();
 
   await query(
     `INSERT INTO bookings
-      (id, property_id, owner_id, traveler_id, traveler_email, check_in, check_out, nights, amount_total, commission_amount, payout_amount, status)
+      (id, property_id, owner_id, traveler_id, traveler_email, check_in, check_out, months, amount_total, commission_amount, payout_amount, status)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending')`,
-    [bookingId, property.slug, property.owner_id, req.user.id, req.user.email, checkIn, checkOut, nights, amountTotal, commissionAmount, payoutAmount]
+    [bookingId, property.slug, property.owner_id, req.user.id, req.user.email, checkIn, checkOut, monthsInt, amountTotal, commissionAmount, payoutAmount]
   );
 
   res.json({
     bookingId,
     amountTotal,
-    nights,
+    months: monthsInt,
+    checkOut,
     publicKey: process.env.KKIAPAY_PUBLIC_KEY,
     sandbox: process.env.KKIAPAY_SANDBOX === "true",
   });
@@ -572,7 +581,7 @@ app.post("/api/bookings/:id/confirm", requireAuth, async (req, res) => {
       payoutDueToOwner: booking.payout_amount,
       checkIn: booking.check_in,
       checkOut: booking.check_out,
-      nights: booking.nights,
+      months: booking.months,
     });
   } catch (err) {
     console.error("Erreur de verification Kkiapay:", err.message);

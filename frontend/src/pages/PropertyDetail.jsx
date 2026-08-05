@@ -107,8 +107,8 @@ export default function PropertyDetail() {
 
         <div className="flex items-center justify-between rounded-2xl p-4 bg-white border border-sandDeep mb-8">
           <div>
-            <div className="text-lg font-semibold text-clay">{fmt(property.price_per_night)}</div>
-            <div className="text-xs text-ink2">par nuit</div>
+            <div className="text-lg font-semibold text-clay">{fmt(property.price_per_month)}</div>
+            <div className="text-xs text-ink2">par mois</div>
           </div>
           <button
             onClick={() => navigate(`/logement/${property.slug}/reserver`)}

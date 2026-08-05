@@ -72,7 +72,7 @@ export default function OwnerDashboard() {
       await api.createProperty({
         title: form.title,
         city: form.city,
-        pricePerNight: Number(form.price),
+        pricePerMonth: Number(form.price),
         guests: Number(form.guests),
         beds: Number(form.beds),
         description: form.desc,
@@ -201,7 +201,7 @@ export default function OwnerDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-ink900 truncate">{p.title}</p>
                   <p className="text-xs text-ink2">
-                    {p.city} · {fmt(p.price_per_night)}/nuit
+                    {p.city} · {fmt(p.price_per_month)}/mois
                     {p.photo_urls?.length > 0 && ` · ${p.photo_urls.length} photo${p.photo_urls.length > 1 ? "s" : ""}`}
                   </p>
                 </div>
@@ -330,7 +330,7 @@ export default function OwnerDashboard() {
             className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
           />
           <input
-            placeholder="Prix par nuit (F CFA)"
+            placeholder="Prix par mois (F CFA)"
             type="number"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}

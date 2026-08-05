@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS properties (
   slug TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
   city TEXT NOT NULL,
-  price_per_night INTEGER NOT NULL,
+  price_per_month INTEGER NOT NULL,
   guests INTEGER NOT NULL,
   beds INTEGER NOT NULL,
   lat DOUBLE PRECISION NOT NULL,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   traveler_email TEXT,
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
-  nights INTEGER NOT NULL,
+  months INTEGER NOT NULL,
   amount_total INTEGER NOT NULL,
   commission_amount INTEGER NOT NULL,
   payout_amount INTEGER NOT NULL,
@@ -103,9 +103,9 @@ INSERT INTO users (id, email, password_hash, name, role) VALUES
   ($t$owner-roger$t$, $t$roger@example.com$t$, $t$$2a$10$oJohEGhjaKPG98L9ZruBmOzpto8YSekjstHLhaAOLWkKQ4ZSWUHPO$t$, $t$Roger$t$, $t$owner$t$)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO properties (id, slug, title, city, price_per_night, guests, beds, lat, lng, tag, description, owner_id, owner_name) VALUES
-  ($t$prop-1$t$, $t$villa-ganvie$t$, $t$Villa sur pilotis, Ganvié$t$, $t$Ganvié$t$, 45000, 4, 2, 6.4667, 2.4167, $t$Lagune$t$, $t$Villa au bord de l'eau avec vue sur la cité lacustre de Ganvié, accès en pirogue privée le matin.$t$, $t$owner-adjovi$t$, $t$Adjovi K.$t$),
-  ($t$prop-2$t$, $t$appart-cotonou$t$, $t$Appartement moderne, Cotonou$t$, $t$Cotonou$t$, 32000, 2, 1, 6.3703, 2.3912, $t$Centre-ville$t$, $t$Appartement climatisé proche de la Marina, idéal pour un séjour d'affaires ou une escale en ville.$t$, $t$owner-adjovi$t$, $t$Adjovi K.$t$),
-  ($t$prop-3$t$, $t$case-ouidah$t$, $t$Case traditionnelle, Ouidah$t$, $t$Ouidah$t$, 28000, 3, 2, 6.3616, 2.0852, $t$Culture$t$, $t$Logement à deux pas de la Route des Esclaves et des temples vaudou, jardin privé tropical.$t$, $t$owner-roger$t$, $t$Roger T.$t$),
-  ($t$prop-4$t$, $t$bungalow-grand-popo$t$, $t$Bungalow plage, Grand-Popo$t$, $t$Grand-Popo$t$, 38000, 5, 3, 6.2833, 1.8167, $t$Plage$t$, $t$Bungalow face à l'océan Atlantique, réveil au son des vagues et ponton privé pour le coucher de soleil.$t$, $t$owner-roger$t$, $t$Roger T.$t$)
+INSERT INTO properties (id, slug, title, city, price_per_month, guests, beds, lat, lng, tag, description, owner_id, owner_name) VALUES
+  ($t$prop-1$t$, $t$villa-ganvie$t$, $t$Villa sur pilotis, Ganvié$t$, $t$Ganvié$t$, 450000, 4, 2, 6.4667, 2.4167, $t$Lagune$t$, $t$Villa au bord de l'eau avec vue sur la cité lacustre de Ganvié, accès en pirogue privée le matin.$t$, $t$owner-adjovi$t$, $t$Adjovi K.$t$),
+  ($t$prop-2$t$, $t$appart-cotonou$t$, $t$Appartement moderne, Cotonou$t$, $t$Cotonou$t$, 320000, 2, 1, 6.3703, 2.3912, $t$Centre-ville$t$, $t$Appartement climatisé proche de la Marina, idéal pour un séjour d'affaires ou une escale en ville.$t$, $t$owner-adjovi$t$, $t$Adjovi K.$t$),
+  ($t$prop-3$t$, $t$case-ouidah$t$, $t$Case traditionnelle, Ouidah$t$, $t$Ouidah$t$, 200000, 3, 2, 6.3616, 2.0852, $t$Culture$t$, $t$Logement à deux pas de la Route des Esclaves et des temples vaudou, jardin privé tropical.$t$, $t$owner-roger$t$, $t$Roger T.$t$),
+  ($t$prop-4$t$, $t$bungalow-grand-popo$t$, $t$Bungalow plage, Grand-Popo$t$, $t$Grand-Popo$t$, 380000, 5, 3, 6.2833, 1.8167, $t$Plage$t$, $t$Bungalow face à l'océan Atlantique, réveil au son des vagues et ponton privé pour le coucher de soleil.$t$, $t$owner-roger$t$, $t$Roger T.$t$)
 ON CONFLICT (id) DO NOTHING;

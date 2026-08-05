@@ -21,8 +21,8 @@ export default function PropertyCard({ property }) {
             {property.tag}
           </span>
           <span className="text-sm font-semibold text-clay">
-            {fmt(property.price_per_night)}
-            <span className="text-xs font-normal text-ink2"> / nuit</span>
+            {fmt(property.price_per_month)}
+            <span className="text-xs font-normal text-ink2"> / mois</span>
           </span>
         </div>
         <h3 className="mt-2 text-base font-display font-semibold text-ink900">{property.title}</h3>

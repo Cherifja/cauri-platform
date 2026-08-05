@@ -13,9 +13,17 @@ function addDays(isoDate, days) {
   return toISODate(d);
 }
 
-function nightsBetween(checkIn, checkOut) {
-  const ms = new Date(checkOut) - new Date(checkIn);
-  return Math.round(ms / (24 * 60 * 60 * 1000));
+// Même logique que côté serveur (addMonths dans server.js) : gère
+// correctement les fins de mois irrégulières (31 janvier + 1 mois =
+// 28/29 février, pas le 3 mars). Sert uniquement à un aperçu local ; le
+// vrai calcul, qui fait foi, est toujours refait côté serveur.
+function addMonths(isoDate, months) {
+  const d = new Date(isoDate + "T00:00:00Z");
+  const targetMonth = d.getUTCMonth() + months;
+  const result = new Date(Date.UTC(d.getUTCFullYear(), targetMonth, 1));
+  const lastDay = new Date(Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)).getUTCDate();
+  result.setUTCDate(Math.min(d.getUTCDate(), lastDay));
+  return toISODate(result);
 }
 
 // Un intervalle [checkIn, checkOut) chevauche une plage bloquée si les
@@ -33,7 +41,7 @@ export default function Booking() {
   const [blockedRanges, setBlockedRanges] = useState([]);
   const today = useMemo(() => toISODate(new Date()), []);
   const [checkIn, setCheckIn] = useState(addDays(today, 1));
-  const [checkOut, setCheckOut] = useState(addDays(today, 4));
+  const [months, setMonths] = useState(1);
   const [status, setStatus] = useState("loading"); // loading | ready | paying | error
   const [dateError, setDateError] = useState("");
 
@@ -82,26 +90,14 @@ export default function Booking() {
       </div>
     );
 
-  const nights = nightsBetween(checkIn, checkOut);
-  const validRange = nights > 0;
-  const conflict = validRange && overlapsBlocked(checkIn, checkOut, blockedRanges);
-  const total = validRange ? property.price_per_night * nights : 0;
+  const checkOut = addMonths(checkIn, months);
+  const conflict = overlapsBlocked(checkIn, checkOut, blockedRanges);
+  const total = property.price_per_month * months;
   const preview = splitCommission(total);
 
-  function handleCheckInChange(value) {
-    setCheckIn(value);
-    if (value >= checkOut) {
-      setCheckOut(addDays(value, 1));
-    }
-  }
-
   async function startPayment() {
-    if (!validRange) {
-      setDateError("La date de départ doit être après la date d'arrivée.");
-      return;
-    }
     if (conflict) {
-      setDateError("Ces dates ne sont plus disponibles pour ce logement.");
+      setDateError("Cette période n'est plus disponible pour ce logement.");
       return;
     }
     setDateError("");
@@ -110,7 +106,7 @@ export default function Booking() {
       const { bookingId, amountTotal, publicKey, sandbox } = await api.initiateBooking({
         propertyId: property.slug,
         checkIn,
-        checkOut,
+        months,
       });
 
       if (typeof window.openKkiapayWidget !== "function") {
@@ -125,9 +121,9 @@ export default function Booking() {
       });
       setStatus("ready");
     } catch (err) {
-      // Le backend renvoie 409 si les dates viennent d'être prises par
+      // Le backend renvoie 409 si la période vient d'être prise par
       // quelqu'un d'autre entre l'affichage de la page et le clic.
-      if (err.message && err.message.includes("disponibles")) {
+      if (err.message && err.message.includes("disponible")) {
         setDateError(err.message);
         api.getAvailability(slug).then((data) => setBlockedRanges(data.blockedRanges));
       } else {
@@ -157,37 +153,49 @@ export default function Booking() {
 
           <div className="grid grid-cols-2 gap-3 mb-3">
             <label className="block">
-              <span className="text-[11px] uppercase tracking-wide text-ink2">Arrivée</span>
+              <span className="text-[11px] uppercase tracking-wide text-ink2">Date d'entrée</span>
               <input
                 type="date"
                 min={today}
                 value={checkIn}
-                onChange={(e) => handleCheckInChange(e.target.value)}
+                onChange={(e) => setCheckIn(e.target.value)}
                 className="mt-1 w-full px-2 py-2 rounded-lg text-sm bg-sand text-ink900"
               />
             </label>
             <label className="block">
-              <span className="text-[11px] uppercase tracking-wide text-ink2">Départ</span>
-              <input
-                type="date"
-                min={addDays(checkIn, 1)}
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-                className="mt-1 w-full px-2 py-2 rounded-lg text-sm bg-sand text-ink900"
-              />
+              <span className="text-[11px] uppercase tracking-wide text-ink2">Durée</span>
+              <div className="mt-1 flex items-center gap-2 bg-sand rounded-lg px-2 py-2">
+                <button
+                  type="button"
+                  onClick={() => setMonths((m) => Math.max(1, m - 1))}
+                  className="w-6 h-6 rounded-full bg-white text-ink900 text-sm"
+                >
+                  −
+                </button>
+                <span className="flex-1 text-center text-sm text-ink900">
+                  {months} mois
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setMonths((m) => Math.min(24, m + 1))}
+                  className="w-6 h-6 rounded-full bg-white text-ink900 text-sm"
+                >
+                  +
+                </button>
+              </div>
             </label>
           </div>
 
-          {!validRange && (
-            <p className="text-xs text-clay mb-2">La date de départ doit être après l'arrivée.</p>
-          )}
-          {validRange && conflict && (
+          <p className="text-xs text-ink2 mb-2">
+            Du {new Date(checkIn).toLocaleDateString("fr-FR")} au{" "}
+            {new Date(checkOut).toLocaleDateString("fr-FR")}
+          </p>
+
+          {conflict && (
             <p className="text-xs text-clay mb-2">
-              Ces dates chevauchent une réservation existante — essayez une autre période.
+              Cette période chevauche une réservation existante — essaie une autre date d'entrée
+              ou une durée différente.
             </p>
-          )}
-          {validRange && !conflict && (
-            <p className="text-xs text-ink2 mb-2">{nights} nuit{nights > 1 ? "s" : ""}</p>
           )}
 
           <div className="flex items-center justify-between text-sm pt-2 border-t border-sandDeep">
@@ -220,7 +228,7 @@ export default function Booking() {
 
         <button
           onClick={startPayment}
-          disabled={status === "paying" || !validRange || conflict}
+          disabled={status === "paying" || conflict}
           className="w-full py-4 rounded-xl text-sm font-medium bg-clay text-cream disabled:opacity-50"
         >
           {status === "paying" ? "Ouverture du paiement…" : `Payer ${fmt(total)} avec Kkiapay`}

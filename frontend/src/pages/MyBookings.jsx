@@ -3,10 +3,6 @@ import { Link } from "react-router-dom";
 import { api, fmt } from "../lib/api.js";
 import { StarPicker } from "../components/Stars.jsx";
 
-function nightsBetween(a, b) {
-  return Math.round((new Date(b) - new Date(a)) / 86400000);
-}
-
 function formatDate(d) {
   return new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -65,7 +61,6 @@ function ReviewForm({ booking, onSubmitted }) {
 
 function BookingCard({ booking: b, canReview, isOpen, onOpenReview, justReviewed, onSubmitted }) {
   const statusStyle = STATUS_STYLE[b.status] || { bg: "#F1E6D2", color: "#666", label: b.status };
-  const nights = nightsBetween(b.check_in, b.check_out);
 
   return (
     <div className="rounded-2xl overflow-hidden bg-white border border-sandDeep shadow-sm">
@@ -96,7 +91,7 @@ function BookingCard({ booking: b, canReview, isOpen, onOpenReview, justReviewed
           <span className="text-sandDeep">→</span>
           <span>{formatDate(b.check_out)}</span>
           <span className="text-sandDeep">·</span>
-          <span>{nights} nuit{nights > 1 ? "s" : ""}</span>
+          <span>{b.months} mois</span>
         </div>
 
         {b.already_reviewed && (
