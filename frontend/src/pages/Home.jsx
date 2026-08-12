@@ -3,14 +3,6 @@ import PropertyCard from "../components/PropertyCard.jsx";
 import PaymentMethods from "../components/PaymentMethods.jsx";
 import { api } from "../lib/api.js";
 
-const TOURISM_HIGHLIGHTS = [
-  { name: "Ganvié", desc: "La \"Venise de l'Afrique\", cité lacustre sur pilotis." },
-  { name: "Route des Pêches", desc: "Bord de mer entre Cotonou et Ouidah, restaurants et plages." },
-  { name: "Ouidah", desc: "Route des Esclaves, temples vaudou et patrimoine historique." },
-  { name: "Grand-Popo", desc: "Plages calmes et embouchure du fleuve Mono." },
-  { name: "Parc national de la Pendjari", desc: "Safari et faune sauvage, au nord du pays." },
-];
-
 export default function Home() {
   const [properties, setProperties] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
@@ -149,21 +141,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="px-5 md:px-8 py-10 md:py-14 max-w-6xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">À découvrir</p>
-        <h2 className="text-xl md:text-2xl mb-6 font-display font-semibold text-ink900">
-          Le Bénin autour de votre séjour
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {TOURISM_HIGHLIGHTS.map((h) => (
-            <div key={h.name} className="rounded-xl p-4 bg-sand">
-              <p className="text-sm font-medium mb-1 text-ink900">{h.name}</p>
-              <p className="text-xs text-ink2">{h.desc}</p>
-            </div>
-          ))}
         </div>
       </div>
     </div>

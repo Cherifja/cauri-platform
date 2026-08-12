@@ -81,12 +81,20 @@ export default function Header() {
 
         <div className="flex flex-col p-3">
           {user?.role === "traveler" && (
-            <button
-              onClick={() => go("/mes-reservations")}
-              className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
-            >
-              Mes réservations
-            </button>
+            <>
+              <button
+                onClick={() => go("/mes-reservations")}
+                className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
+              >
+                Mes réservations
+              </button>
+              <button
+                onClick={() => go("/decouvrir")}
+                className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
+              >
+                À découvrir
+              </button>
+            </>
           )}
 
           {user?.role === "owner" && (
