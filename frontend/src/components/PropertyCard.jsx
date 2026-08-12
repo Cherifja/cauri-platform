@@ -10,11 +10,18 @@ export default function PropertyCard({ property }) {
       to={`/logement/${property.slug}`}
       className="text-left rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform block bg-white border border-sandDeep"
     >
-      {coverPhoto ? (
-        <img src={coverPhoto} alt={property.title} className="w-full h-40 object-cover" />
-      ) : (
-        <MapPreview tag={property.tag} />
-      )}
+      <div className="relative">
+        {coverPhoto ? (
+          <img src={coverPhoto} alt={property.title} className="w-full h-40 object-cover" />
+        ) : (
+          <MapPreview tag={property.tag} />
+        )}
+        {property.is_verified && (
+          <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full bg-white/95 text-green shadow-sm">
+            ✓ Vérifié
+          </span>
+        )}
+      </div>
       <div className="p-4">
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">

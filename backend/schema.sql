@@ -52,6 +52,8 @@ CREATE TABLE IF NOT EXISTS properties (
   video_url TEXT,
   owner_id TEXT NOT NULL REFERENCES users(id),
   owner_name TEXT NOT NULL,
+  is_verified BOOLEAN NOT NULL DEFAULT false,
+  verified_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

@@ -86,6 +86,11 @@ export default function PropertyDetail() {
               {property.property_type}
             </span>
           )}
+          {property.is_verified && (
+            <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-white border border-green text-green">
+              ✓ Logement vérifié
+            </span>
+          )}
         </div>
         <h1 className="text-2xl md:text-3xl mt-2 mb-1 font-display font-semibold text-ink900">
           {property.title}
