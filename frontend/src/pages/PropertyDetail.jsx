@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import MapPreview from "../components/MapPreview.jsx";
 import { StarDisplay } from "../components/Stars.jsx";
 import { api, fmt, mapsDirectionsUrl } from "../lib/api.js";
+import { distanceToCotonouAirportKm } from "../lib/propertyOptions.js";
 
 export default function PropertyDetail() {
   const { slug } = useParams();
@@ -76,9 +77,16 @@ export default function PropertyDetail() {
           />
         )}
 
-        <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">
-          {property.tag}
-        </span>
+        <div className="flex flex-wrap gap-2">
+          <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">
+            {property.tag}
+          </span>
+          {property.property_type && (
+            <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-sand text-ink2">
+              {property.property_type}
+            </span>
+          )}
+        </div>
         <h1 className="text-2xl md:text-3xl mt-2 mb-1 font-display font-semibold text-ink900">
           {property.title}
         </h1>
@@ -90,10 +98,32 @@ export default function PropertyDetail() {
             </span>
           </div>
         )}
-        <p className="text-sm mb-4 text-ink2">
+        <p className="text-sm mb-1 text-ink2">
+          {property.neighborhood ? `${property.neighborhood}, ` : ""}
           {property.city} · {property.guests} voyageurs · {property.beds} chambres
         </p>
+        {property.landmark && (
+          <p className="text-xs mb-1 text-ink2">📍 {property.landmark}</p>
+        )}
+        {property.lat && property.lng && (
+          <p className="text-xs mb-4 text-ink2">
+            ✈️ {distanceToCotonouAirportKm(property.lat, property.lng)} km de l'aéroport de Cotonou
+          </p>
+        )}
         <p className="text-sm leading-relaxed mb-5 text-ink900">{property.description}</p>
+
+        {property.amenities && property.amenities.length > 0 && (
+          <div className="mb-5">
+            <p className="text-xs uppercase tracking-wide mb-2 text-ink2">Équipements</p>
+            <div className="grid grid-cols-2 gap-2">
+              {property.amenities.map((item) => (
+                <div key={item} className="flex items-center gap-2 text-xs text-ink900">
+                  <span className="text-green">✓</span> {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <a
           href={mapsUrl}

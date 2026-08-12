@@ -299,7 +299,10 @@ app.get("/api/properties/:slug", async (req, res) => {
 });
 
 app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
-  const { title, city, pricePerMonth, guests, beds, lat, lng, tag, description, photoUrls, videoUrl } = req.body;
+  const {
+    title, city, neighborhood, propertyType, pricePerMonth, guests, beds,
+    lat, lng, tag, description, landmark, amenities, photoUrls, videoUrl,
+  } = req.body;
   const ownerId = req.user.id;
   const ownerName = req.user.name;
 
@@ -315,6 +318,10 @@ app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
     ? photoUrls.filter((u) => typeof u === "string" && u.startsWith("http")).slice(0, 10)
     : [];
 
+  const cleanAmenities = Array.isArray(amenities)
+    ? amenities.filter((a) => typeof a === "string" && a.trim().length > 0).slice(0, 20)
+    : [];
+
   const id = crypto.randomUUID();
   const slug = `${title}-${id.slice(0, 6)}`
     .toLowerCase()
@@ -323,13 +330,15 @@ app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
     .replace(/(^-|-$)/g, "");
 
   await query(
-    `INSERT INTO properties (id, slug, title, city, price_per_month, guests, beds, lat, lng, tag, description, photo_urls, video_url, owner_id, owner_name)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+    `INSERT INTO properties (id, slug, title, city, neighborhood, property_type, price_per_month, guests, beds, lat, lng, tag, description, landmark, amenities, photo_urls, video_url, owner_id, owner_name)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`,
     [
       id,
       slug,
       title,
       city,
+      neighborhood || null,
+      propertyType || null,
       Number(pricePerMonth),
       Number(guests) || 1,
       Number(beds) || 1,
@@ -337,6 +346,8 @@ app.post("/api/properties", requireAuth, requireOwner, async (req, res) => {
       Number(lng) || 2.39,
       tag || "Nouveau",
       description || "",
+      landmark || null,
+      cleanAmenities,
       cleanPhotoUrls,
       typeof videoUrl === "string" && videoUrl.startsWith("http") ? videoUrl : null,
       ownerId,

@@ -3,10 +3,19 @@ import PropertyCard from "../components/PropertyCard.jsx";
 import PaymentMethods from "../components/PaymentMethods.jsx";
 import { api } from "../lib/api.js";
 
+const TOURISM_HIGHLIGHTS = [
+  { name: "Ganvié", desc: "La \"Venise de l'Afrique\", cité lacustre sur pilotis." },
+  { name: "Route des Pêches", desc: "Bord de mer entre Cotonou et Ouidah, restaurants et plages." },
+  { name: "Ouidah", desc: "Route des Esclaves, temples vaudou et patrimoine historique." },
+  { name: "Grand-Popo", desc: "Plages calmes et embouchure du fleuve Mono." },
+  { name: "Parc national de la Pendjari", desc: "Safari et faune sauvage, au nord du pays." },
+];
+
 export default function Home() {
   const [properties, setProperties] = useState([]);
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const [selectedCity, setSelectedCity] = useState(""); // "" = toutes les villes
+  const [neighborhoodQuery, setNeighborhoodQuery] = useState("");
 
   useEffect(() => {
     api
@@ -23,9 +32,15 @@ export default function Home() {
     return unique.sort((a, b) => a.localeCompare(b, "fr"));
   }, [properties]);
 
-  const filteredProperties = selectedCity
-    ? properties.filter((p) => p.city === selectedCity)
-    : properties;
+  const filteredProperties = properties.filter((p) => {
+    const matchesCity = !selectedCity || p.city === selectedCity;
+    const q = neighborhoodQuery.trim().toLowerCase();
+    const matchesNeighborhood =
+      !q ||
+      (p.neighborhood && p.neighborhood.toLowerCase().includes(q)) ||
+      p.title.toLowerCase().includes(q);
+    return matchesCity && matchesNeighborhood;
+  });
 
   return (
     <div>
@@ -59,6 +74,16 @@ export default function Home() {
           </p>
         )}
 
+        {status === "ready" && (
+          <input
+            type="text"
+            placeholder="Rechercher un quartier (ex. Akpakpa, Fidjrossè, Cadjèhoun…)"
+            value={neighborhoodQuery}
+            onChange={(e) => setNeighborhoodQuery(e.target.value)}
+            className="w-full mb-4 px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
+          />
+        )}
+
         {status === "ready" && cities.length > 1 && (
           <div className="flex flex-wrap gap-2 mb-5">
             <button
@@ -88,12 +113,56 @@ export default function Home() {
         )}
 
         {status === "ready" && filteredProperties.length === 0 && (
-          <p className="text-sm text-ink2">Aucun logement disponible dans cette ville pour le moment.</p>
+          <p className="text-sm text-ink2">Aucun logement ne correspond à cette recherche pour le moment.</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredProperties.map((p) => (
             <PropertyCard key={p.id} property={p} />
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-ink">
+        <div className="px-5 md:px-8 py-10 md:py-14 max-w-6xl mx-auto">
+          <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">Confiance</p>
+          <h2 className="text-xl md:text-2xl mb-6 font-display font-semibold text-cream">
+            Réserver l'esprit tranquille
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <p className="text-sm font-medium mb-1 text-cream">Logements vérifiés</p>
+              <p className="text-xs text-sandDeep">
+                Chaque annonce est publiée par un propriétaire identifié sur la plateforme.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-1 text-cream">Prix transparents</p>
+              <p className="text-xs text-sandDeep">
+                Le montant affiché est le montant payé, sans frais cachés à l'arrivée.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-1 text-cream">Assistance disponible</p>
+              <p className="text-xs text-sandDeep">
+                Contact WhatsApp direct avec le propriétaire dès la réservation confirmée.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 md:px-8 py-10 md:py-14 max-w-6xl mx-auto">
+        <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">À découvrir</p>
+        <h2 className="text-xl md:text-2xl mb-6 font-display font-semibold text-ink900">
+          Le Bénin autour de votre séjour
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {TOURISM_HIGHLIGHTS.map((h) => (
+            <div key={h.name} className="rounded-xl p-4 bg-sand">
+              <p className="text-sm font-medium mb-1 text-ink900">{h.name}</p>
+              <p className="text-xs text-ink2">{h.desc}</p>
+            </div>
           ))}
         </div>
       </div>

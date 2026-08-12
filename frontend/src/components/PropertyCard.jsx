@@ -27,6 +27,7 @@ export default function PropertyCard({ property }) {
         </div>
         <h3 className="mt-2 text-base font-display font-semibold text-ink900">{property.title}</h3>
         <p className="text-xs mt-1 text-ink2">
+          {property.neighborhood ? `${property.neighborhood}, ` : ""}
           {property.city} · {property.guests} voyageurs · {property.beds} chambres
         </p>
         {property.review_count > 0 && (

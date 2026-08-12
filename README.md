@@ -89,6 +89,15 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
   sans réservation payée passée), un seul avis par réservation. Page
   "Mes réservations" (`/mes-reservations`) pour que le voyageur retrouve
   son historique et laisse ses avis
+- **Recherche adaptée au Bénin** : recherche libre par quartier (Akpakpa,
+  Fidjrossè, Cadjèhoun...) en plus du filtre par ville, quartier affiché
+  sur chaque annonce
+- **Fiches logement détaillées** : type de logement (Studio, Villa,
+  Auberge...), liste d'équipements (climatisation, eau 24h/24, wifi,
+  groupe électrogène, parking, sécurité...), point de repère local, et
+  distance à vol d'oiseau jusqu'à l'aéroport de Cotonou
+- **Section confiance et tourisme** sur la page d'accueil, mettant en avant
+  Ganvié, la Route des Pêches, Ouidah, Grand-Popo et le parc de la Pendjari
 - Espace propriétaire : publication d'annonces, suivi des revenus en attente de virement
 - Prêt à déployer : base PostgreSQL (compatible hébergement serverless),
   configuration Render (`render.yaml`) et Vercel (`frontend/vercel.json`)

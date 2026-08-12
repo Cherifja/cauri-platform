@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, fmt } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
 import { mediaStorage } from "../lib/mediaStorage.js";
+import { AMENITIES, PROPERTY_TYPES } from "../lib/propertyOptions.js";
 
 const MAX_PHOTOS = 8;
 
@@ -10,7 +11,18 @@ export default function OwnerDashboard() {
   const [tab, setTab] = useState("annonces");
   const [properties, setProperties] = useState([]);
   const [balance, setBalance] = useState(null);
-  const [form, setForm] = useState({ title: "", city: "", price: "", guests: 2, beds: 1, desc: "" });
+  const [form, setForm] = useState({
+    title: "",
+    city: "",
+    neighborhood: "",
+    propertyType: PROPERTY_TYPES[0],
+    price: "",
+    guests: 2,
+    beds: 1,
+    desc: "",
+    landmark: "",
+    amenities: [],
+  });
   const [photoFiles, setPhotoFiles] = useState([]); // File[]
   const [videoFile, setVideoFile] = useState(null); // File | null
   const [submitting, setSubmitting] = useState(false);
@@ -72,15 +84,30 @@ export default function OwnerDashboard() {
       await api.createProperty({
         title: form.title,
         city: form.city,
+        neighborhood: form.neighborhood,
+        propertyType: form.propertyType,
         pricePerMonth: Number(form.price),
         guests: Number(form.guests),
         beds: Number(form.beds),
         description: form.desc,
+        landmark: form.landmark,
+        amenities: form.amenities,
         photoUrls,
         videoUrl,
       });
 
-      setForm({ title: "", city: "", price: "", guests: 2, beds: 1, desc: "" });
+      setForm({
+        title: "",
+        city: "",
+        neighborhood: "",
+        propertyType: PROPERTY_TYPES[0],
+        price: "",
+        guests: 2,
+        beds: 1,
+        desc: "",
+        landmark: "",
+        amenities: [],
+      });
       setPhotoFiles([]);
       setVideoFile(null);
       loadProperties();
@@ -114,6 +141,15 @@ export default function OwnerDashboard() {
     } catch (err) {
       setWaStatus("error");
     }
+  }
+
+  function toggleAmenity(item) {
+    setForm((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(item)
+        ? prev.amenities.filter((a) => a !== item)
+        : [...prev.amenities, item],
+    }));
   }
 
   async function handleDelete(property) {
@@ -330,6 +366,23 @@ export default function OwnerDashboard() {
             className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
           />
           <input
+            placeholder="Quartier (ex. Akpakpa, Fidjrossè)"
+            value={form.neighborhood}
+            onChange={(e) => setForm({ ...form, neighborhood: e.target.value })}
+            className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
+          />
+          <select
+            value={form.propertyType}
+            onChange={(e) => setForm({ ...form, propertyType: e.target.value })}
+            className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
+          >
+            {PROPERTY_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+          <input
             placeholder="Prix par mois (F CFA)"
             type="number"
             value={form.price}
@@ -359,6 +412,31 @@ export default function OwnerDashboard() {
             rows={3}
             className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
           />
+          <input
+            placeholder="Point de repère (ex. près du carrefour Toyota)"
+            value={form.landmark}
+            onChange={(e) => setForm({ ...form, landmark: e.target.value })}
+            className="px-4 py-3 rounded-xl text-sm bg-white border border-sandDeep"
+          />
+
+          <div className="rounded-xl p-4 bg-sand">
+            <label className="block text-xs uppercase tracking-wide mb-2 text-ink2">
+              Équipements disponibles
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {AMENITIES.map((item) => (
+                <label key={item} className="flex items-center gap-2 text-xs text-ink900">
+                  <input
+                    type="checkbox"
+                    checked={form.amenities.includes(item)}
+                    onChange={() => toggleAmenity(item)}
+                    className="accent-clay"
+                  />
+                  {item}
+                </label>
+              ))}
+            </div>
+          </div>
 
           <div className="rounded-xl p-4 bg-sand">
             <label className="block text-xs uppercase tracking-wide mb-2 text-ink2">
