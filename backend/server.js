@@ -52,6 +52,23 @@ function requireAuth(req, res, next) {
   }
 }
 
+// Identifie l'utilisateur connecté sans jamais bloquer la requête : utile
+// pour les routes publiques (ex. liste des logements) qui affichent un
+// contenu légèrement personnalisé quand un voyageur est connecté, tout en
+// restant accessibles aux visiteurs anonymes.
+function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (token) {
+    try {
+      req.user = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      // Jeton invalide/expiré : on continue simplement en visiteur anonyme.
+    }
+  }
+  next();
+}
+
 // À utiliser après requireAuth pour restreindre certaines routes aux seuls
 // comptes propriétaires (ex. publication d'annonces, revenus).
 function requireOwner(req, res, next) {
@@ -265,7 +282,8 @@ function getPropertyBySlug(slug) {
   );
 }
 
-app.get("/api/properties", async (req, res) => {
+app.get("/api/properties", optionalAuth, async (req, res) => {
+  const isTraveler = req.user && req.user.role === "traveler";
   const rows = await query(
     `SELECT p.*,
             COALESCE(r.avg_rating, 0)::float AS avg_rating,
@@ -276,18 +294,20 @@ app.get("/api/properties", async (req, res) => {
        FROM reviews GROUP BY property_id
      ) r ON r.property_id = p.slug
      WHERE NOT EXISTS (
-       -- Un logement est masqué de la liste tant qu'un séjour payé y est en
-       -- cours aujourd'hui (check_in <= aujourd'hui < check_out). Il redevient
-       -- visible automatiquement dès que ce séjour se termine. La fiche
-       -- détaillée (accès direct par lien) reste toujours consultable, pour
-       -- ne pas casser un lien déjà partagé.
+       -- Un logement reste visible pour tout le monde sur la plateforme,
+       -- même pendant un séjour payé en cours. Il n'est masqué que pour le
+       -- voyageur qui a lui-même réservé ce séjour actif, pour éviter
+       -- qu'il ne se re-réserve son propre logement par erreur.
        SELECT 1 FROM bookings b
        WHERE b.property_id = p.slug
          AND b.status = 'paid'
          AND b.check_in <= CURRENT_DATE
          AND b.check_out > CURRENT_DATE
+         AND $1::boolean
+         AND b.traveler_id = $2
      )
-     ORDER BY p.created_at DESC`
+     ORDER BY p.created_at DESC`,
+    [isTraveler, isTraveler ? req.user.id : null]
   );
   res.json(rows);
 });
