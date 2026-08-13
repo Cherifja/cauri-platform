@@ -106,6 +106,15 @@ export default function Header() {
             </button>
           )}
 
+          {user?.isAdmin && (
+            <button
+              onClick={() => go("/admin")}
+              className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
+            >
+              Administration
+            </button>
+          )}
+
           <button
             onClick={handleLogout}
             className="text-left px-3 py-3 rounded-xl text-sm text-clay hover:bg-ink2 mt-1"

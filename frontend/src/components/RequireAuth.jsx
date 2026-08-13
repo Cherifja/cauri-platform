@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext.jsx";
 
-export default function RequireAuth({ children, redirectTo = "/proprietaire/connexion", requireRole }) {
+export default function RequireAuth({ children, redirectTo = "/proprietaire/connexion", requireRole, requireAdmin }) {
   const { user, checking } = useAuth();
   const location = useLocation();
 
@@ -16,6 +16,9 @@ export default function RequireAuth({ children, redirectTo = "/proprietaire/conn
   if (requireRole && user.role !== requireRole) {
     // Connecté, mais avec le mauvais type de compte (ex. un voyageur qui
     // tente d'ouvrir le tableau de bord propriétaire).
+    return <Navigate to={redirectTo} replace state={{ from: location.pathname }} />;
+  }
+  if (requireAdmin && !user.isAdmin) {
     return <Navigate to={redirectTo} replace state={{ from: location.pathname }} />;
   }
   return children;

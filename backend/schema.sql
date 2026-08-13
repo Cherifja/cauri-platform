@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   name TEXT NOT NULL,
   role TEXT NOT NULL DEFAULT $t$owner$t$,
+  -- Independant de "role" (owner/traveler) : un compte peut cumuler son
+  -- role habituel ET des droits d'administration, sans que l'un remplace
+  -- l'autre. Reserve a Cherif (createur de la plateforme) pour l'instant.
+  is_admin BOOLEAN NOT NULL DEFAULT false,
   mobile_money_number TEXT,
   -- Numero WhatsApp du proprietaire (format international, ex. 22997000000),
   -- utilise pour permettre au voyageur de le contacter directement apres

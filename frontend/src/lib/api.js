@@ -82,3 +82,12 @@ export function splitCommission(total) {
 export function mapsDirectionsUrl(lat, lng) {
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
+
+export const admin = {
+  listProperties: () => request("/api/admin/properties"),
+  setVerified: (slug, verified) =>
+    request(`/api/admin/properties/${slug}/verify`, {
+      method: "PATCH",
+      body: JSON.stringify({ verified }),
+    }),
+};

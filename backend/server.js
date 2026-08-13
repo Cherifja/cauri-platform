@@ -85,9 +85,19 @@ function requireTraveler(req, res, next) {
   next();
 }
 
+// Independant du role (owner/traveler) : verifie le drapeau isAdmin du
+// jeton, present uniquement pour les comptes marques comme administrateurs
+// en base (voir migrations/010_add_admin_flag.sql).
+function requireAdmin(req, res, next) {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ error: "Réservé aux administrateurs" });
+  }
+  next();
+}
+
 function issueToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, name: user.name, role: user.role },
+    { id: user.id, email: user.email, name: user.name, role: user.role, isAdmin: Boolean(user.isAdmin) },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
@@ -132,7 +142,7 @@ app.post("/api/auth/login", async (req, res) => {
   const validPassword = await bcrypt.compare(password, row.password_hash);
   if (!validPassword) return res.status(401).json({ error: "Email ou mot de passe incorrect" });
 
-  const user = { id: row.id, email: row.email, name: row.name, role: row.role };
+  const user = { id: row.id, email: row.email, name: row.name, role: row.role, isAdmin: row.is_admin };
   res.json({ token: issueToken(user), user });
 });
 
@@ -405,6 +415,30 @@ app.delete("/api/properties/:slug", requireAuth, requireOwner, async (req, res) 
 
   await query("DELETE FROM properties WHERE slug = $1", [property.slug]);
   res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ */
+/* Administration                                                       */
+/* ------------------------------------------------------------------ */
+
+app.get("/api/admin/properties", requireAuth, requireAdmin, async (req, res) => {
+  const rows = await query(
+    `SELECT slug, title, city, owner_name, is_verified, verified_at
+     FROM properties ORDER BY created_at DESC`
+  );
+  res.json(rows);
+});
+
+app.patch("/api/admin/properties/:slug/verify", requireAuth, requireAdmin, async (req, res) => {
+  const { verified } = req.body;
+  const property = await queryOne("SELECT slug FROM properties WHERE slug = $1", [req.params.slug]);
+  if (!property) return res.status(404).json({ error: "Logement introuvable" });
+
+  await query(
+    `UPDATE properties SET is_verified = $1, verified_at = CASE WHEN $1 THEN now() ELSE NULL END WHERE slug = $2`,
+    [Boolean(verified), property.slug]
+  );
+  res.json({ ok: true, slug: property.slug, verified: Boolean(verified) });
 });
 
 /* ------------------------------------------------------------------ */

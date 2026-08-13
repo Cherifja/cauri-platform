@@ -98,6 +98,9 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
   distance à vol d'oiseau jusqu'à l'aéroport de Cotonou
 - **Section confiance et tourisme** sur la page d'accueil, mettant en avant
   Ganvié, la Route des Pêches, Ouidah, Grand-Popo et le parc de la Pendjari
+- **Badge "Logement vérifié"** : espace d'administration (`/admin`, réservé
+  aux comptes marqués `is_admin` en base) permettant d'activer/désactiver
+  le badge d'un simple clic après vérification manuelle du propriétaire
 - Espace propriétaire : publication d'annonces, suivi des revenus en attente de virement
 - Prêt à déployer : base PostgreSQL (compatible hébergement serverless),
   configuration Render (`render.yaml`) et Vercel (`frontend/vercel.json`)

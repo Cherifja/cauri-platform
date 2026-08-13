@@ -7,6 +7,7 @@ import PropertyDetail from "./pages/PropertyDetail.jsx";
 import Booking from "./pages/Booking.jsx";
 import Confirmation from "./pages/Confirmation.jsx";
 import OwnerDashboard from "./pages/OwnerDashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
@@ -64,6 +65,14 @@ export default function App() {
             element={
               <RequireAuth requireRole="owner">
                 <OwnerDashboard />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireAuth redirectTo="/" requireAdmin>
+                <AdminDashboard />
               </RequireAuth>
             }
           />
