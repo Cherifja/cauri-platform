@@ -1,17 +1,21 @@
-const METHODS = [
-  { label: "Carte bancaire", desc: "Visa, Mastercard — standard international." },
-  { label: "Mobile Money", desc: "MTN et Moov, rapide et largement adopté localement." },
-  { label: "Virement", desc: "Sur demande pour les montants élevés (villas, longs séjours)." },
-  { label: "Paiement sécurisé", desc: "Fonds vérifiés auprès de Kkiapay avant confirmation." },
-];
+import { useLanguage } from "../lib/LanguageContext.jsx";
 
 export default function PaymentMethods() {
+  const { t } = useLanguage();
+
+  const METHODS = [
+    { label: t("payments.card"), desc: t("payments.cardDesc") },
+    { label: t("payments.mobileMoney"), desc: t("payments.mobileMoneyDesc") },
+    { label: t("payments.transfer"), desc: t("payments.transferDesc") },
+    { label: t("payments.secure"), desc: t("payments.secureDesc") },
+  ];
+
   return (
     <div className="bg-ink">
       <div className="px-5 md:px-8 py-8 md:py-14 max-w-6xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">Moyens disponibles</p>
+        <p className="text-xs uppercase tracking-[0.2em] mb-2 text-gold">{t("payments.tagline")}</p>
         <h2 className="text-2xl md:text-3xl leading-snug mb-6 md:mb-8 font-display font-semibold text-cream md:max-w-xl">
-          S'adapter aux usages locaux et internationaux
+          {t("payments.title")}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6 md:gap-x-6">
           {METHODS.map((m) => (
