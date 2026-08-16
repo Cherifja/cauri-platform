@@ -10,7 +10,7 @@ const dict = {
     "header.menu.logout": "Déconnexion",
 
     "home.tagline": "Réservez • Payez • Arrivez seul",
-    "home.title": "Votre logement au Bénin, trouvé et payé avant le décollage.",
+    "home.title": "Votre séjour au Bénin, réservé d'avance.",
     "home.subtitle": "Chaque annonce inclut un itinéraire Google Maps précis jusqu'à la porte.",
     "home.available": "Logements disponibles",
     "home.loading": "Chargement des logements…",
@@ -80,7 +80,7 @@ const dict = {
     "header.menu.logout": "Log out",
 
     "home.tagline": "Book • Pay • Arrive alone",
-    "home.title": "Your home in Benin, found and paid for before takeoff.",
+    "home.title": "Your stay in Benin, booked ahead of time.",
     "home.subtitle": "Every listing includes a precise Google Maps route to the door.",
     "home.available": "Available homes",
     "home.loading": "Loading homes…",
