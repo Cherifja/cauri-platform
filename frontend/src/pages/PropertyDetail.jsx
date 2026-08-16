@@ -4,10 +4,12 @@ import MapPreview from "../components/MapPreview.jsx";
 import { StarDisplay } from "../components/Stars.jsx";
 import { api, fmt, mapsDirectionsUrl } from "../lib/api.js";
 import { distanceToCotonouAirportKm } from "../lib/propertyOptions.js";
+import { useLanguage } from "../lib/LanguageContext.jsx";
 
 export default function PropertyDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
   const [property, setProperty] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [status, setStatus] = useState("loading");
@@ -22,13 +24,13 @@ export default function PropertyDetail() {
       .catch(() => setStatus("error"));
   }, [slug]);
 
-  if (status === "loading") return <p className="p-5 text-sm text-ink2">Chargement…</p>;
+  if (status === "loading") return <p className="p-5 text-sm text-ink2">{t("property.loading")}</p>;
   if (status === "error" || !property)
     return (
       <div className="p-5">
-        <p className="text-sm text-clay mb-3">Logement introuvable.</p>
+        <p className="text-sm text-clay mb-3">{t("property.notFound")}</p>
         <Link to="/" className="text-sm text-ink2 underline">
-          Retour à l'accueil
+          {t("property.backHome")}
         </Link>
       </div>
     );
@@ -40,7 +42,7 @@ export default function PropertyDetail() {
     <div className="bg-cream min-h-full">
       <div className="p-5 md:p-8 max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="text-xs mb-4 text-ink2">
-          ← Retour
+          ← {t("property.back")}
         </button>
 
         {photos.length > 0 ? (
@@ -88,7 +90,7 @@ export default function PropertyDetail() {
           )}
           {property.is_verified && (
             <span className="text-[10px] uppercase tracking-wide px-2 py-1 rounded-full bg-white border border-green text-green">
-              ✓ Logement vérifié
+              ✓ {t("property.verifiedFull")}
             </span>
           )}
         </div>
@@ -99,27 +101,28 @@ export default function PropertyDetail() {
           <div className="flex items-center gap-2 mb-1">
             <StarDisplay rating={property.avg_rating} />
             <span className="text-xs text-ink2">
-              {property.avg_rating.toFixed(1)} ({property.review_count} avis)
+              {property.avg_rating.toFixed(1)} ({property.review_count})
             </span>
           </div>
         )}
         <p className="text-sm mb-1 text-ink2">
           {property.neighborhood ? `${property.neighborhood}, ` : ""}
-          {property.city} · {property.guests} voyageurs · {property.beds} chambres
+          {property.city} · {property.guests} {t("property.guests")} · {property.beds}{" "}
+          {t("property.beds")}
         </p>
         {property.landmark && (
           <p className="text-xs mb-1 text-ink2">📍 {property.landmark}</p>
         )}
         {property.lat && property.lng && (
           <p className="text-xs mb-4 text-ink2">
-            ✈️ {distanceToCotonouAirportKm(property.lat, property.lng)} km de l'aéroport de Cotonou
+            ✈️ {distanceToCotonouAirportKm(property.lat, property.lng)} {t("property.airportDistance")}
           </p>
         )}
         <p className="text-sm leading-relaxed mb-5 text-ink900">{property.description}</p>
 
         {property.amenities && property.amenities.length > 0 && (
           <div className="mb-5">
-            <p className="text-xs uppercase tracking-wide mb-2 text-ink2">Équipements</p>
+            <p className="text-xs uppercase tracking-wide mb-2 text-ink2">{t("property.amenities")}</p>
             <div className="grid grid-cols-2 gap-2">
               {property.amenities.map((item) => (
                 <div key={item} className="flex items-center gap-2 text-xs text-ink900">
@@ -136,29 +139,29 @@ export default function PropertyDetail() {
           rel="noopener noreferrer"
           className="flex items-center justify-between rounded-xl px-4 py-3 mb-6 bg-ink text-cream"
         >
-          <span className="text-sm">Ouvrir l'itinéraire dans Google Maps</span>
+          <span className="text-sm">{t("property.openMaps")}</span>
           <span className="text-gold">↗</span>
         </a>
 
         <div className="flex items-center justify-between rounded-2xl p-4 bg-white border border-sandDeep mb-8">
           <div>
             <div className="text-lg font-semibold text-clay">{fmt(property.price_per_month)}</div>
-            <div className="text-xs text-ink2">par mois</div>
+            <div className="text-xs text-ink2">{t("property.perMonthLong")}</div>
           </div>
           <button
             onClick={() => navigate(`/logement/${property.slug}/reserver`)}
             className="px-5 py-3 rounded-xl text-sm font-medium bg-clay text-cream"
           >
-            Réserver
+            {t("property.book")}
           </button>
         </div>
 
         <div>
           <h2 className="text-lg font-display font-semibold text-ink900 mb-3">
-            Avis des voyageurs {reviews.length > 0 && `(${reviews.length})`}
+            {t("property.reviews")} {reviews.length > 0 && `(${reviews.length})`}
           </h2>
           {reviews.length === 0 ? (
-            <p className="text-sm text-ink2">Aucun avis pour l'instant.</p>
+            <p className="text-sm text-ink2">{t("property.noReviews")}</p>
           ) : (
             <div className="flex flex-col gap-3">
               {reviews.map((r) => (
@@ -169,7 +172,10 @@ export default function PropertyDetail() {
                   </div>
                   {r.comment && <p className="text-sm text-ink2">{r.comment}</p>}
                   <p className="text-[11px] text-ink2 mt-1">
-                    {new Date(r.created_at).toLocaleDateString("fr-FR", { year: "numeric", month: "long" })}
+                    {new Date(r.created_at).toLocaleDateString(lang === "en" ? "en-US" : "fr-FR", {
+                      year: "numeric",
+                      month: "long",
+                    })}
                   </p>
                 </div>
               ))}

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { useLanguage } from "../lib/LanguageContext.jsx";
 
 export default function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { lang, setLang, t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
 
   function closeMenu() {
@@ -32,24 +34,45 @@ export default function Header() {
             </span>
           </Link>
 
-          {user ? (
-            <button
-              onClick={() => setMenuOpen(true)}
-              aria-label="Ouvrir le menu du compte"
-              className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-full bg-ink2"
-            >
-              <span className="block w-4 h-0.5 bg-sandDeep" />
-              <span className="block w-4 h-0.5 bg-sandDeep" />
-              <span className="block w-4 h-0.5 bg-sandDeep" />
-            </button>
-          ) : (
-            <button
-              onClick={() => navigate("/connexion")}
-              className="text-[11px] md:text-xs px-3 py-1.5 rounded-full bg-ink2 text-sandDeep hover:text-cream"
-            >
-              Se connecter
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-full p-0.5 bg-ink2">
+              <button
+                onClick={() => setLang("fr")}
+                className={`text-[11px] px-2.5 py-1 rounded-full ${
+                  lang === "fr" ? "bg-sand text-ink900" : "text-sandDeep"
+                }`}
+              >
+                FR
+              </button>
+              <button
+                onClick={() => setLang("en")}
+                className={`text-[11px] px-2.5 py-1 rounded-full ${
+                  lang === "en" ? "bg-sand text-ink900" : "text-sandDeep"
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
+            {user ? (
+              <button
+                onClick={() => setMenuOpen(true)}
+                aria-label="Ouvrir le menu du compte"
+                className="w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-full bg-ink2"
+              >
+                <span className="block w-4 h-0.5 bg-sandDeep" />
+                <span className="block w-4 h-0.5 bg-sandDeep" />
+                <span className="block w-4 h-0.5 bg-sandDeep" />
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate("/connexion")}
+                className="text-[11px] md:text-xs px-3 py-1.5 rounded-full bg-ink2 text-sandDeep hover:text-cream"
+              >
+                {t("header.login")}
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -86,13 +109,13 @@ export default function Header() {
                 onClick={() => go("/mes-reservations")}
                 className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
               >
-                Mes réservations
+                {t("header.menu.myBookings")}
               </button>
               <button
                 onClick={() => go("/decouvrir")}
                 className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
               >
-                À découvrir
+                {t("header.menu.discover")}
               </button>
             </>
           )}
@@ -102,7 +125,7 @@ export default function Header() {
               onClick={() => go("/proprietaire")}
               className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
             >
-              Mon espace propriétaire
+              {t("header.menu.ownerSpace")}
             </button>
           )}
 
@@ -111,7 +134,7 @@ export default function Header() {
               onClick={() => go("/admin")}
               className="text-left px-3 py-3 rounded-xl text-sm text-cream hover:bg-ink2"
             >
-              Administration
+              {t("header.menu.admin")}
             </button>
           )}
 
@@ -119,7 +142,7 @@ export default function Header() {
             onClick={handleLogout}
             className="text-left px-3 py-3 rounded-xl text-sm text-clay hover:bg-ink2 mt-1"
           >
-            Déconnexion
+            {t("header.menu.logout")}
           </button>
         </div>
       </div>

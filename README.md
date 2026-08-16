@@ -101,6 +101,11 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
 - **Badge "Logement vérifié"** : espace d'administration (`/admin`, réservé
   aux comptes marqués `is_admin` en base) permettant d'activer/désactiver
   le badge d'un simple clic après vérification manuelle du propriétaire
+- **Site bilingue français/anglais** : sélecteur FR/EN dans l'en-tête,
+  préférence mémorisée sur l'appareil. Pages traduites en priorité pour
+  l'instant : accueil, fiches logement, réservation (les pages internes —
+  formulaires propriétaire, emails — restent en français, à traduire dans
+  une prochaine passe si besoin)
 - Espace propriétaire : publication d'annonces, suivi des revenus en attente de virement
 - Prêt à déployer : base PostgreSQL (compatible hébergement serverless),
   configuration Render (`render.yaml`) et Vercel (`frontend/vercel.json`)

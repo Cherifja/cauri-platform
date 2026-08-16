@@ -2,8 +2,10 @@ import { Link } from "react-router-dom";
 import MapPreview from "./MapPreview.jsx";
 import { StarDisplay } from "./Stars.jsx";
 import { fmt } from "../lib/api.js";
+import { useLanguage } from "../lib/LanguageContext.jsx";
 
 export default function PropertyCard({ property }) {
+  const { t } = useLanguage();
   const coverPhoto = property.photo_urls?.[0];
   return (
     <Link
@@ -18,7 +20,7 @@ export default function PropertyCard({ property }) {
         )}
         {property.is_verified && (
           <span className="absolute top-2 left-2 flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-full bg-white/95 text-green shadow-sm">
-            ✓ Vérifié
+            ✓ {t("property.verified")}
           </span>
         )}
       </div>
@@ -29,13 +31,14 @@ export default function PropertyCard({ property }) {
           </span>
           <span className="text-sm font-semibold text-clay">
             {fmt(property.price_per_month)}
-            <span className="text-xs font-normal text-ink2"> / mois</span>
+            <span className="text-xs font-normal text-ink2"> {t("property.perMonth")}</span>
           </span>
         </div>
         <h3 className="mt-2 text-base font-display font-semibold text-ink900">{property.title}</h3>
         <p className="text-xs mt-1 text-ink2">
           {property.neighborhood ? `${property.neighborhood}, ` : ""}
-          {property.city} · {property.guests} voyageurs · {property.beds} chambres
+          {property.city} · {property.guests} {t("property.guests")} · {property.beds}{" "}
+          {t("property.beds")}
         </p>
         {property.review_count > 0 && (
           <div className="flex items-center gap-1 mt-1">

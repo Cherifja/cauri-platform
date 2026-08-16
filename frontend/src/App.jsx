@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header.jsx";
 import RequireAuth from "./components/RequireAuth.jsx";
 import { AuthProvider } from "./lib/AuthContext.jsx";
+import { LanguageProvider } from "./lib/LanguageContext.jsx";
 import Home from "./pages/Home.jsx";
 import PropertyDetail from "./pages/PropertyDetail.jsx";
 import Booking from "./pages/Booking.jsx";
@@ -21,8 +22,9 @@ import Discover from "./pages/Discover.jsx";
 
 export default function App() {
   return (
-    <AuthProvider>
-      <div className="min-h-screen font-body">
+    <LanguageProvider>
+      <AuthProvider>
+        <div className="min-h-screen font-body">
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -78,6 +80,7 @@ export default function App() {
           />
         </Routes>
       </div>
-    </AuthProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

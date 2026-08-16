@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api, fmt, splitCommission } from "../lib/api.js";
 import { useAuth } from "../lib/AuthContext.jsx";
+import { useLanguage } from "../lib/LanguageContext.jsx";
 
 function toISODate(date) {
   return date.toISOString().slice(0, 10);
@@ -37,6 +38,7 @@ export default function Booking() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, lang } = useLanguage();
   const [property, setProperty] = useState(null);
   const [blockedRanges, setBlockedRanges] = useState([]);
   const today = useMemo(() => toISODate(new Date()), []);
@@ -79,13 +81,13 @@ export default function Booking() {
     if (window.addFailedListener) window.addFailedListener(onFailed);
   }, [property, navigate]);
 
-  if (status === "loading") return <p className="p-5 text-sm text-ink2">Chargement…</p>;
+  if (status === "loading") return <p className="p-5 text-sm text-ink2">{t("property.loading")}</p>;
   if (!property)
     return (
       <div className="p-5 max-w-2xl mx-auto">
-        <p className="text-sm text-clay mb-3">Logement introuvable.</p>
+        <p className="text-sm text-clay mb-3">{t("property.notFound")}</p>
         <Link to="/" className="text-sm text-ink2 underline">
-          Retour à l'accueil
+          {t("property.backHome")}
         </Link>
       </div>
     );
@@ -94,10 +96,11 @@ export default function Booking() {
   const conflict = overlapsBlocked(checkIn, checkOut, blockedRanges);
   const total = property.price_per_month * months;
   const preview = splitCommission(total);
+  const locale = lang === "en" ? "en-US" : "fr-FR";
 
   async function startPayment() {
     if (conflict) {
-      setDateError("Cette période n'est plus disponible pour ce logement.");
+      setDateError(t("booking.conflict"));
       return;
     }
     setDateError("");
@@ -123,7 +126,7 @@ export default function Booking() {
     } catch (err) {
       // Le backend renvoie 409 si la période vient d'être prise par
       // quelqu'un d'autre entre l'affichage de la page et le clic.
-      if (err.message && err.message.includes("disponible")) {
+      if (err.message && (err.message.includes("disponible") || err.message.includes("available"))) {
         setDateError(err.message);
         api.getAvailability(slug).then((data) => setBlockedRanges(data.blockedRanges));
       } else {
@@ -137,14 +140,12 @@ export default function Booking() {
     <div className="bg-cream min-h-full">
       <div className="p-5 max-w-2xl mx-auto">
         <button onClick={() => navigate(-1)} className="text-xs mb-4 text-ink2">
-          ← Retour
+          ← {t("property.back")}
         </button>
-        <h1 className="text-xl mb-1 font-display font-semibold text-ink900">
-          Confirmer et payer
-        </h1>
+        <h1 className="text-xl mb-1 font-display font-semibold text-ink900">{t("booking.title")}</h1>
         {user && (
           <p className="text-xs mb-4 text-ink2">
-            Connecté en tant que <strong>{user.name}</strong> ({user.email})
+            {t("booking.loggedInAs")} <strong>{user.name}</strong> ({user.email})
           </p>
         )}
 
@@ -153,7 +154,7 @@ export default function Booking() {
 
           <div className="grid grid-cols-2 gap-3 mb-3">
             <label className="block">
-              <span className="text-[11px] uppercase tracking-wide text-ink2">Date d'entrée</span>
+              <span className="text-[11px] uppercase tracking-wide text-ink2">{t("booking.checkIn")}</span>
               <input
                 type="date"
                 min={today}
@@ -163,7 +164,7 @@ export default function Booking() {
               />
             </label>
             <label className="block">
-              <span className="text-[11px] uppercase tracking-wide text-ink2">Durée</span>
+              <span className="text-[11px] uppercase tracking-wide text-ink2">{t("booking.duration")}</span>
               <div className="mt-1 flex items-center gap-2 bg-sand rounded-lg px-2 py-2">
                 <button
                   type="button"
@@ -173,7 +174,7 @@ export default function Booking() {
                   −
                 </button>
                 <span className="flex-1 text-center text-sm text-ink900">
-                  {months} mois
+                  {months} {t("booking.months")}
                 </span>
                 <button
                   type="button"
@@ -187,43 +188,36 @@ export default function Booking() {
           </div>
 
           <p className="text-xs text-ink2 mb-2">
-            Du {new Date(checkIn).toLocaleDateString("fr-FR")} au{" "}
-            {new Date(checkOut).toLocaleDateString("fr-FR")}
+            {t("booking.dateRange")
+              .replace("{start}", new Date(checkIn).toLocaleDateString(locale))
+              .replace("{end}", new Date(checkOut).toLocaleDateString(locale))}
           </p>
 
-          {conflict && (
-            <p className="text-xs text-clay mb-2">
-              Cette période chevauche une réservation existante — essaie une autre date d'entrée
-              ou une durée différente.
-            </p>
-          )}
+          {conflict && <p className="text-xs text-clay mb-2">{t("booking.conflict")}</p>}
 
           <div className="flex items-center justify-between text-sm pt-2 border-t border-sandDeep">
-            <span className="text-ink2">Total payé par le voyageur</span>
+            <span className="text-ink2">{t("booking.total")}</span>
             <span className="font-semibold text-clay">{fmt(total)}</span>
           </div>
         </div>
 
         <div className="rounded-2xl p-4 mb-5 bg-sand">
-          <p className="text-[11px] uppercase tracking-wide mb-2 text-ink2">
-            Répartition automatique (calculée côté serveur)
-          </p>
+          <p className="text-[11px] uppercase tracking-wide mb-2 text-ink2">{t("booking.breakdown")}</p>
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-ink900">Commission plateforme (12%)</span>
+            <span className="text-ink900">{t("booking.commission")}</span>
             <span className="text-ink900">{fmt(preview.commission)}</span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-ink900">Reversé à {property.owner_name}</span>
+            <span className="text-ink900">
+              {t("booking.payout")} {property.owner_name}
+            </span>
             <span className="font-semibold text-green">{fmt(preview.payout)}</span>
           </div>
         </div>
 
         {dateError && <p className="text-xs mb-3 text-clay">{dateError}</p>}
         {status === "error" && (
-          <p className="text-xs mb-3 text-clay">
-            Impossible de joindre le backend. Vérifie que le serveur tourne sur{" "}
-            <code>localhost:4000</code>.
-          </p>
+          <p className="text-xs mb-3 text-clay">{t("booking.backendError")}</p>
         )}
 
         <button
@@ -231,7 +225,9 @@ export default function Booking() {
           disabled={status === "paying" || conflict}
           className="w-full py-4 rounded-xl text-sm font-medium bg-clay text-cream disabled:opacity-50"
         >
-          {status === "paying" ? "Ouverture du paiement…" : `Payer ${fmt(total)} avec Kkiapay`}
+          {status === "paying"
+            ? t("booking.opening")
+            : `${t("booking.pay")} ${fmt(total)} ${t("booking.withKkiapay")}`}
         </button>
       </div>
     </div>
