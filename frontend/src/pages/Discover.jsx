@@ -1,5 +1,9 @@
 import { useState } from "react";
 
+// Chaque destination peut recevoir une "photoUrl" et/ou une "videoUrl"
+// (chemins vers des fichiers dans /public/decouvrir/, ajoutés au fur et à
+// mesure que les médias arrivent). Tant qu'aucun des deux n'est renseigné,
+// la bannière illustrée (dégradé + icône) reste affichée automatiquement.
 const TOURISM_HIGHLIGHTS = [
   {
     name: "Ganvié",
@@ -8,6 +12,8 @@ const TOURISM_HIGHLIGHTS = [
       "Bâti entièrement sur l'eau au milieu du lac Nokoué, Ganvié se visite en pirogue, souvent au lever du soleil quand les pêcheurs relèvent leurs filets. On y découvre des maisons sur pilotis, un marché flottant animé, et un mode de vie unique en Afrique de l'Ouest, fondé il y a plusieurs siècles pour échapper aux razzias terrestres. Compte une demi-journée pour une visite tranquille en pirogue.",
     icon: "🛶",
     gradient: "from-[#0E4D64] to-[#1B7A8C]",
+    photoUrl: null,
+    videoUrl: null,
   },
   {
     name: "Route des Pêches",
@@ -16,6 +22,8 @@ const TOURISM_HIGHLIGHTS = [
       "Cette route longe l'océan Atlantique sur une vingtaine de kilomètres entre Cotonou et Ouidah. On y trouve des plages de sable, des restaurants et bars en bord de mer, ainsi que quelques hôtels et résidences. C'est l'endroit privilégié pour une balade en fin de journée, un repas les pieds dans le sable, ou simplement se détendre après un séjour en ville.",
     icon: "🌊",
     gradient: "from-[#1B4B6B] to-[#2E86AB]",
+    photoUrl: null,
+    videoUrl: null,
   },
   {
     name: "Ouidah",
@@ -24,6 +32,8 @@ const TOURISM_HIGHLIGHTS = [
       "Ville chargée d'histoire, Ouidah est considérée comme le berceau du culte vaudou au Bénin. La Route des Esclaves relie le centre-ville à la Porte du Non-Retour, sur la plage, en mémoire de la traite négrière. On y visite aussi le temple des pythons, le musée d'histoire, et la basilique. Une étape culturelle incontournable, facilement accessible depuis Cotonou.",
     icon: "🏛️",
     gradient: "from-[#5C3B1E] to-[#8A5A2E]",
+    photoUrl: null,
+    videoUrl: null,
   },
   {
     name: "Grand-Popo",
@@ -32,6 +42,8 @@ const TOURISM_HIGHLIGHTS = [
       "Plus tranquille que la Route des Pêches, Grand-Popo offre de longues plages peu fréquentées, idéales pour se reposer. On peut y faire une excursion en pirogue sur le fleuve Mono jusqu'à son embouchure, découvrir des villages de pêcheurs, et profiter d'un cadre plus authentique et nature, à environ une heure et demie de Cotonou.",
     icon: "🏖️",
     gradient: "from-[#C1440E] to-[#E3A23C]",
+    photoUrl: null,
+    videoUrl: null,
   },
   {
     name: "Parc national de la Pendjari",
@@ -40,8 +52,31 @@ const TOURISM_HIGHLIGHTS = [
       "Situé à l'extrême nord du Bénin, la Pendjari est l'une des dernières grandes réserves de faune sauvage d'Afrique de l'Ouest : éléphants, lions, buffles, antilopes et de nombreuses espèces d'oiseaux. Les safaris se font généralement en 4x4 tôt le matin ou en fin de journée. C'est un voyage plus long depuis Cotonou (prévoir plusieurs jours), mais unique dans la région.",
     icon: "🦁",
     gradient: "from-[#3D5A1E] to-[#6B8E3D]",
+    photoUrl: null,
+    videoUrl: null,
   },
 ];
+
+function DestinationMedia({ h }) {
+  if (h.videoUrl) {
+    return (
+      <video
+        src={h.videoUrl}
+        controls
+        className="w-full h-40 object-cover bg-black"
+        onClick={(e) => e.stopPropagation()}
+      />
+    );
+  }
+  if (h.photoUrl) {
+    return <img src={h.photoUrl} alt={h.name} className="w-full h-40 object-cover" />;
+  }
+  return (
+    <div className={`h-28 flex items-center justify-center bg-gradient-to-br ${h.gradient}`}>
+      <span className="text-4xl">{h.icon}</span>
+    </div>
+  );
+}
 
 export default function Discover() {
   const [openItem, setOpenItem] = useState(null);
@@ -62,17 +97,12 @@ export default function Discover() {
           {TOURISM_HIGHLIGHTS.map((h) => {
             const isOpen = openItem === h.name;
             return (
-              <button
-                key={h.name}
-                onClick={() => setOpenItem(isOpen ? null : h.name)}
-                className="text-left rounded-xl overflow-hidden bg-white border border-sandDeep"
-              >
-                <div
-                  className={`h-28 flex items-center justify-center bg-gradient-to-br ${h.gradient}`}
+              <div key={h.name} className="rounded-xl overflow-hidden bg-white border border-sandDeep">
+                <DestinationMedia h={h} />
+                <button
+                  onClick={() => setOpenItem(isOpen ? null : h.name)}
+                  className="w-full text-left p-4"
                 >
-                  <span className="text-4xl">{h.icon}</span>
-                </div>
-                <div className="p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-ink900">{h.name}</p>
                     <span className="text-ink2 text-xs">{isOpen ? "−" : "+"}</span>
@@ -83,8 +113,8 @@ export default function Discover() {
                       {h.detail}
                     </p>
                   )}
-                </div>
-              </button>
+                </button>
+              </div>
             );
           })}
         </div>
