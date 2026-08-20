@@ -1,85 +1,50 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { discover } from "../lib/api.js";
 
-// Chaque destination peut recevoir une "photoUrl" et/ou une "videoUrl"
-// (chemins vers des fichiers dans /public/decouvrir/, ajoutés au fur et à
-// mesure que les médias arrivent). Tant qu'aucun des deux n'est renseigné,
-// la bannière illustrée (dégradé + icône) reste affichée automatiquement.
-const TOURISM_HIGHLIGHTS = [
-  {
-    name: "Ganvié",
-    desc: "La \"Venise de l'Afrique\", cité lacustre sur pilotis.",
-    detail:
-      "Bâti entièrement sur l'eau au milieu du lac Nokoué, Ganvié se visite en pirogue, souvent au lever du soleil quand les pêcheurs relèvent leurs filets. On y découvre des maisons sur pilotis, un marché flottant animé, et un mode de vie unique en Afrique de l'Ouest, fondé il y a plusieurs siècles pour échapper aux razzias terrestres. Compte une demi-journée pour une visite tranquille en pirogue.",
-    icon: "🛶",
-    gradient: "from-[#0E4D64] to-[#1B7A8C]",
-    photoUrl: null,
-    videoUrl: null,
-  },
-  {
-    name: "Route des Pêches",
-    desc: "Bord de mer entre Cotonou et Ouidah, restaurants et plages.",
-    detail:
-      "Cette route longe l'océan Atlantique sur une vingtaine de kilomètres entre Cotonou et Ouidah. On y trouve des plages de sable, des restaurants et bars en bord de mer, ainsi que quelques hôtels et résidences. C'est l'endroit privilégié pour une balade en fin de journée, un repas les pieds dans le sable, ou simplement se détendre après un séjour en ville.",
-    icon: "🌊",
-    gradient: "from-[#1B4B6B] to-[#2E86AB]",
-    photoUrl: null,
-    videoUrl: null,
-  },
-  {
-    name: "Ouidah",
-    desc: "Route des Esclaves, temples vaudou et patrimoine historique.",
-    detail:
-      "Ville chargée d'histoire, Ouidah est considérée comme le berceau du culte vaudou au Bénin. La Route des Esclaves relie le centre-ville à la Porte du Non-Retour, sur la plage, en mémoire de la traite négrière. On y visite aussi le temple des pythons, le musée d'histoire, et la basilique. Une étape culturelle incontournable, facilement accessible depuis Cotonou.",
-    icon: "🏛️",
-    gradient: "from-[#5C3B1E] to-[#8A5A2E]",
-    photoUrl: null,
-    videoUrl: null,
-  },
-  {
-    name: "Grand-Popo",
-    desc: "Plages calmes et embouchure du fleuve Mono.",
-    detail:
-      "Plus tranquille que la Route des Pêches, Grand-Popo offre de longues plages peu fréquentées, idéales pour se reposer. On peut y faire une excursion en pirogue sur le fleuve Mono jusqu'à son embouchure, découvrir des villages de pêcheurs, et profiter d'un cadre plus authentique et nature, à environ une heure et demie de Cotonou.",
-    icon: "🏖️",
-    gradient: "from-[#C1440E] to-[#E3A23C]",
-    photoUrl: null,
-    videoUrl: null,
-  },
-  {
-    name: "Parc national de la Pendjari",
-    desc: "Safari et faune sauvage, au nord du pays.",
-    detail:
-      "Situé à l'extrême nord du Bénin, la Pendjari est l'une des dernières grandes réserves de faune sauvage d'Afrique de l'Ouest : éléphants, lions, buffles, antilopes et de nombreuses espèces d'oiseaux. Les safaris se font généralement en 4x4 tôt le matin ou en fin de journée. C'est un voyage plus long depuis Cotonou (prévoir plusieurs jours), mais unique dans la région.",
-    icon: "🦁",
-    gradient: "from-[#3D5A1E] to-[#6B8E3D]",
-    photoUrl: null,
-    videoUrl: null,
-  },
+const FALLBACK_GRADIENTS = [
+  "from-[#0E4D64] to-[#1B7A8C]",
+  "from-[#1B4B6B] to-[#2E86AB]",
+  "from-[#5C3B1E] to-[#8A5A2E]",
+  "from-[#C1440E] to-[#E3A23C]",
+  "from-[#3D5A1E] to-[#6B8E3D]",
 ];
 
-function DestinationMedia({ h }) {
-  if (h.videoUrl) {
+function DestinationMedia({ spot, index }) {
+  if (spot.video_url) {
     return (
       <video
-        src={h.videoUrl}
+        src={spot.video_url}
         controls
         className="w-full h-40 object-cover bg-black"
         onClick={(e) => e.stopPropagation()}
       />
     );
   }
-  if (h.photoUrl) {
-    return <img src={h.photoUrl} alt={h.name} className="w-full h-40 object-cover" />;
+  if (spot.photo_url) {
+    return <img src={spot.photo_url} alt={spot.name} className="w-full h-40 object-cover" />;
   }
+  const gradient = FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length];
   return (
-    <div className={`h-28 flex items-center justify-center bg-gradient-to-br ${h.gradient}`}>
-      <span className="text-4xl">{h.icon}</span>
+    <div className={`h-28 flex items-center justify-center bg-gradient-to-br ${gradient}`}>
+      <span className="text-4xl">{spot.icon || "📍"}</span>
     </div>
   );
 }
 
 export default function Discover() {
+  const [spots, setSpots] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
   const [openItem, setOpenItem] = useState(null);
+
+  useEffect(() => {
+    discover
+      .list()
+      .then((data) => {
+        setSpots(data);
+        setStatus("ready");
+      })
+      .catch(() => setStatus("error"));
+  }, []);
 
   return (
     <div className="bg-cream min-h-full">
@@ -93,24 +58,32 @@ export default function Discover() {
       </div>
 
       <div className="px-5 md:px-8 py-8 max-w-4xl mx-auto">
+        {status === "loading" && <p className="text-sm text-ink2">Chargement…</p>}
+        {status === "error" && (
+          <p className="text-sm text-clay">Impossible de charger les destinations pour le moment.</p>
+        )}
+        {status === "ready" && spots.length === 0 && (
+          <p className="text-sm text-ink2">Aucune destination pour l'instant.</p>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {TOURISM_HIGHLIGHTS.map((h) => {
-            const isOpen = openItem === h.name;
+          {spots.map((spot, index) => {
+            const isOpen = openItem === spot.id;
             return (
-              <div key={h.name} className="rounded-xl overflow-hidden bg-white border border-sandDeep">
-                <DestinationMedia h={h} />
+              <div key={spot.id} className="rounded-xl overflow-hidden bg-white border border-sandDeep">
+                <DestinationMedia spot={spot} index={index} />
                 <button
-                  onClick={() => setOpenItem(isOpen ? null : h.name)}
+                  onClick={() => setOpenItem(isOpen ? null : spot.id)}
                   className="w-full text-left p-4"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-ink900">{h.name}</p>
+                    <p className="text-sm font-medium text-ink900">{spot.name}</p>
                     <span className="text-ink2 text-xs">{isOpen ? "−" : "+"}</span>
                   </div>
-                  <p className="text-xs mt-1 text-ink2">{h.desc}</p>
-                  {isOpen && (
+                  {spot.short_desc && <p className="text-xs mt-1 text-ink2">{spot.short_desc}</p>}
+                  {isOpen && spot.detail && (
                     <p className="text-xs mt-3 pt-3 border-t border-sandDeep leading-relaxed text-ink900">
-                      {h.detail}
+                      {spot.detail}
                     </p>
                   )}
                 </button>

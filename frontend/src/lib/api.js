@@ -90,4 +90,13 @@ export const admin = {
       method: "PATCH",
       body: JSON.stringify({ verified }),
     }),
+  createDiscoverSpot: (payload) =>
+    request("/api/admin/discover", { method: "POST", body: JSON.stringify(payload) }),
+  updateDiscoverSpot: (id, payload) =>
+    request(`/api/admin/discover/${id}`, { method: "PATCH", body: JSON.stringify(payload) }),
+  deleteDiscoverSpot: (id) => request(`/api/admin/discover/${id}`, { method: "DELETE" }),
+};
+
+export const discover = {
+  list: () => request("/api/discover"),
 };

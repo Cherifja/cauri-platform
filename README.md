@@ -98,9 +98,11 @@ backend via `VITE_API_BASE` (par défaut `http://localhost:4000`).
   distance à vol d'oiseau jusqu'à l'aéroport de Cotonou
 - **Section confiance et tourisme** sur la page d'accueil, mettant en avant
   Ganvié, la Route des Pêches, Ouidah, Grand-Popo et le parc de la Pendjari
-- **Badge "Logement vérifié"** : espace d'administration (`/admin`, réservé
-  aux comptes marqués `is_admin` en base) permettant d'activer/désactiver
-  le badge d'un simple clic après vérification manuelle du propriétaire
+- **Espace admin complet** (`/admin`, réservé aux comptes marqués `is_admin`
+  en base) : activer/désactiver le badge "Logement vérifié" d'un clic, et
+  gérer entièrement la page "À découvrir" (ajout/modification/suppression
+  de destinations touristiques, avec upload direct de photo et vidéo par
+  destination) — plus besoin de repasser par le code pour ça
 - **Site bilingue français/anglais** : sélecteur FR/EN dans l'en-tête,
   préférence mémorisée sur l'appareil. Pages traduites en priorité pour
   l'instant : accueil, fiches logement, réservation (les pages internes —

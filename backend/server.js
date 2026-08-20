@@ -442,6 +442,69 @@ app.patch("/api/admin/properties/:slug/verify", requireAuth, requireAdmin, async
 });
 
 /* ------------------------------------------------------------------ */
+/* À découvrir (destinations touristiques)                             */
+/* ------------------------------------------------------------------ */
+
+// Publique : affichée sur la page "/decouvrir" pour tous les voyageurs.
+app.get("/api/discover", async (req, res) => {
+  const rows = await query("SELECT * FROM discover_spots ORDER BY position ASC, created_at ASC");
+  res.json(rows);
+});
+
+app.post("/api/admin/discover", requireAuth, requireAdmin, async (req, res) => {
+  const { name, shortDesc, detail, icon, photoUrl, videoUrl } = req.body;
+  if (!name) return res.status(400).json({ error: "Le nom de la destination est requis" });
+
+  const id = crypto.randomUUID();
+  const countRow = await queryOne("SELECT COUNT(*)::int AS n FROM discover_spots");
+  const position = countRow.n;
+
+  await query(
+    `INSERT INTO discover_spots (id, name, short_desc, detail, icon, photo_url, video_url, position)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [
+      id,
+      name,
+      shortDesc || "",
+      detail || "",
+      icon || "📍",
+      typeof photoUrl === "string" && photoUrl.startsWith("http") ? photoUrl : null,
+      typeof videoUrl === "string" && videoUrl.startsWith("http") ? videoUrl : null,
+      position,
+    ]
+  );
+  res.status(201).json({ id });
+});
+
+app.patch("/api/admin/discover/:id", requireAuth, requireAdmin, async (req, res) => {
+  const spot = await queryOne("SELECT id FROM discover_spots WHERE id = $1", [req.params.id]);
+  if (!spot) return res.status(404).json({ error: "Destination introuvable" });
+
+  const { name, shortDesc, detail, icon, photoUrl, videoUrl } = req.body;
+  await query(
+    `UPDATE discover_spots
+     SET name = $1, short_desc = $2, detail = $3, icon = $4,
+         photo_url = $5, video_url = $6
+     WHERE id = $7`,
+    [
+      name,
+      shortDesc || "",
+      detail || "",
+      icon || "📍",
+      typeof photoUrl === "string" && photoUrl.startsWith("http") ? photoUrl : null,
+      typeof videoUrl === "string" && videoUrl.startsWith("http") ? videoUrl : null,
+      spot.id,
+    ]
+  );
+  res.json({ ok: true });
+});
+
+app.delete("/api/admin/discover/:id", requireAuth, requireAdmin, async (req, res) => {
+  await query("DELETE FROM discover_spots WHERE id = $1", [req.params.id]);
+  res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ */
 /* Avis                                                                 */
 /* ------------------------------------------------------------------ */
 
